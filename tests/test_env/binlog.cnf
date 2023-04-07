@@ -1,0 +1,6 @@
+[mysqld]
+log_bin
+server-id = 1
+expire_logs_days = 10
+max_binlog_size = 100M
+binlog-format = row

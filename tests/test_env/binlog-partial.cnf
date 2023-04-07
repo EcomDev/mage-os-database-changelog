@@ -1,0 +1,2 @@
+[mysqld]
+binlog-row-image=minimal

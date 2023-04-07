@@ -1,0 +1,31 @@
+services:
+  percona57:
+    image: percona/percona-server:5.7
+    ports:
+      - 3307:3306
+    env_file: test_env/mysql.env
+    volumes:
+      - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+  percona57min:
+    image: percona/percona-server:5.7
+    ports:
+      - 33071:3306
+    env_file: test_env/mysql.env
+    volumes:
+      - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+      - ./test_env/binlog-partial.cnf:/etc/my.cnf.d/binlog-partial.cnf
+  percona8:
+    image: percona/percona-server:8.0
+    ports:
+      - 3308:3306
+    env_file: test_env/mysql.env
+    volumes:
+      - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+  percona8min:
+    image: percona/percona-server:8.0
+    ports:
+      - 33081:3306
+    env_file: test_env/mysql.env
+    volumes:
+      - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+      - ./test_env/binlog-partial.cnf:/etc/my.cnf.d/binlog-partial.cnf

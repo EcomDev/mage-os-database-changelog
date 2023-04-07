@@ -21,7 +21,7 @@ Then module in the ecommerce store is going to update
 - User for connection via replication protocol with such permissions
 
     ```sql
-    GRANT REPLICATION SLAVE ON *.* TO '[USER]'@'%';
+    GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '[USER]'@'%';
     ```
     If your Magento user already has all privileges like this:
     ```
