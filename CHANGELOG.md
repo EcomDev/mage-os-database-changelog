@@ -8,5 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added `ReplicationReader` to attach to binlog stream and process events into `ReplicationObserver`
 
 [unreleased]: https://github.com/EcomDev/mage-os-database-changelog/compare/0a7c672...HEAD
