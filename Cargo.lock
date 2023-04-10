@@ -896,6 +896,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "mysql_async",
+ "mysql_common",
  "thiserror",
  "tokio",
  "tokio-stream",
