@@ -1,0 +1,2 @@
+[mysqld]
+binlog-row-value-options=PARTIAL_JSON

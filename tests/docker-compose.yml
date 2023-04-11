@@ -29,3 +29,4 @@ services:
     volumes:
       - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
       - ./test_env/binlog-partial.cnf:/etc/my.cnf.d/binlog-partial.cnf
+      - ./test_env/binlog-partial-json.cnf:/etc/my.cnf.d/binlog-partial-json.cnf
