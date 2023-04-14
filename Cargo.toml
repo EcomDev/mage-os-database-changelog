@@ -13,6 +13,8 @@ tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macro
 clap = { version = "4", features = ["derive"] }
 tokio-stream = "0.1"
 thiserror = "1"
+smallvec = "1.10.0"
+bitvec = "1.0.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "test-util"]}

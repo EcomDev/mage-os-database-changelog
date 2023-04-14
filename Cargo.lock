@@ -894,10 +894,12 @@ dependencies = [
 name = "mage_os_database_changelog"
 version = "0.1.0"
 dependencies = [
+ "bitvec",
  "clap",
  "mysql_async",
  "mysql_common",
  "phf",
+ "smallvec",
  "thiserror",
  "tokio",
  "tokio-stream",
