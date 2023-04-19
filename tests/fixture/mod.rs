@@ -13,12 +13,12 @@ pub struct Fixture {
     conn: Conn,
 }
 
-static DATABASE_SCHEMA: [&'static str; 3] = [
+static DATABASE_SCHEMA: [&'static str; 4] = [
     r#"CREATE TABLE entity (
             entity_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            name VARCHAR(255) NOT NULL,
-            description TEXT NOT NULL,
-            price DECIMAL(12, 4) NOT NULL DEFAULT '0.00',
+            name VARCHAR(255),
+            description TEXT,
+            price DECIMAL(12, 4) DEFAULT '0.00',
             PRIMARY KEY(entity_id)
         )"#,
     r#"CREATE TABLE entity_int (
@@ -38,6 +38,16 @@ static DATABASE_SCHEMA: [&'static str; 3] = [
             value JSON,
             PRIMARY KEY(value_id),
             INDEX `attribute_store_entity` (`entity_id`,`attribute_id`,`store_id`)
+        )"#,
+    r#"CREATE TABLE entity_with_multiple_json (
+            value_id INT UNSIGNED NOT NULL AUTO_INCREMENT,            
+            first_column JSON,
+            entity_id INT UNSIGNED NOT NULL,
+            store_id INT UNSIGNED NOT NULL,
+            second_column JSON,
+            some_int_flag INT UNSIGNED DEFAULT 0,
+            PRIMARY KEY(value_id),
+            INDEX `attribute_store_entity` (`entity_id`,`store_id`)
         )"#,
 ];
 

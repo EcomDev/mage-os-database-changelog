@@ -4,6 +4,7 @@ use mysql_common::binlog::value::BinlogValue;
 use mysql_common::io::ParseBuf;
 use mysql_common::proto::MyDeserialize;
 
+use crate::replication::binary_table::BinaryTable;
 use crate::replication::BUFFER_STACK_SIZE;
 use smallvec::SmallVec;
 
@@ -22,16 +23,12 @@ impl SimpleBinaryRow {
 
 pub struct SimpleBinaryRows<'a> {
     rows_event: &'a RowsEventData<'a>,
-    table: &'a TableMapEvent<'a>,
+    table: &'a BinaryTable,
     data: ParseBuf<'a>,
 }
 
 impl<'a> SimpleBinaryRows<'a> {
-    fn new(
-        rows_event: &'a RowsEventData<'a>,
-        table: &'a TableMapEvent<'a>,
-        data: ParseBuf<'a>,
-    ) -> Self {
+    fn new(rows_event: &'a RowsEventData<'a>, table: &'a BinaryTable, data: ParseBuf<'a>) -> Self {
         SimpleBinaryRows {
             rows_event,
             table,
@@ -47,8 +44,12 @@ impl<'a> Iterator for SimpleBinaryRows<'a> {
         let mut left_row = None;
         let mut right_row = None;
 
+        if self.data.is_empty() {
+            return None;
+        }
+
         if let Some(columns) = self.rows_event.columns_after_image() {
-            let ctx = (self.rows_event.num_columns(), columns, false, self.table);
+            let ctx = (columns, false, self.table);
 
             right_row = match self.data.parse(ctx) {
                 Ok(right_row) => Some(right_row),
@@ -69,18 +70,33 @@ impl<'de> MyDeserialize<'de> for SimpleBinaryRow {
     /// * have shared image - `true` means, that this is a partial event
     ///   and this is an after image row. Therefore we need to parse a shared image
     /// * corresponding table map event
-    type Ctx = (u64, &'de BitSlice<u8>, bool, &'de TableMapEvent<'de>);
+    type Ctx = (&'de BitSlice<u8>, bool, &'de BinaryTable);
 
     fn deserialize(
-        (num_columns, columns, have_shared_image, table_info): Self::Ctx,
+        (columns, have_shared_image, table_info): Self::Ctx,
         buf: &mut ParseBuf<'de>,
     ) -> std::io::Result<Self> {
-        let mut values = (0..num_columns).map(|_| None).collect();
+        let mut values = SmallVec::with_capacity(table_info.num_columns());
 
-        let num_bits = columns.count_ones();
-        let bitmap_len = (num_bits + 7) / 8;
-        let bitmap_buf: &[u8] = buf.parse(bitmap_len)?;
-        let null_bitmap = BitVec::<u8>::from_slice(bitmap_buf);
+        let nullable_columns = table_info.null_column_bits(columns, buf)?;
+
+        for index in 0..table_info.num_columns() {
+            let column_type = table_info.get_column_type(index)?;
+            let column_metadata = table_info.get_column_metadata(index)?;
+
+            values.push(match columns.get(index).as_deref() {
+                Some(&true) => Some(
+                    buf.parse::<BinlogValue>((
+                        column_type,
+                        column_metadata,
+                        table_info.is_unsigned(index),
+                        false,
+                    ))?
+                    .into_owned(),
+                ),
+                _ => None,
+            })
+        }
 
         return Ok(Self { values });
     }
@@ -88,20 +104,20 @@ impl<'de> MyDeserialize<'de> for SimpleBinaryRow {
 
 #[cfg(test)]
 mod tests {
+    use crate::replication::binary_table::BinaryTable;
     use crate::replication::rows::{SimpleBinaryRow, SimpleBinaryRows};
-    use crate::replication::test_fixture::{row_event, table_event};
+    use crate::replication::test_fixture::Fixture;
     use mysql_async::Value;
-    use mysql_common::binlog::consts::BinlogVersion;
-    use mysql_common::binlog::events::FormatDescriptionEvent;
     use mysql_common::binlog::value::BinlogValue;
     use mysql_common::io::ParseBuf;
 
     #[test]
     fn converts_single_write_event_for_entity() {
-        let fde = FormatDescriptionEvent::new(BinlogVersion::Version4);
+        let fixture = Fixture::default();
 
-        let event = row_event("write_entity", &fde);
-        let table = table_event("entity", &fde);
+        let event = fixture.row_event("write_entity");
+        let table = BinaryTable::from_table_map_event(&fixture.table_event("entity"));
+
         let binding = ParseBuf(event.rows_data());
         let simple_binary_rows = SimpleBinaryRows::new(&event, &table, ParseBuf(event.rows_data()));
 
@@ -117,7 +133,7 @@ mod tests {
                         binlog_value(1),
                         binlog_value("Product 1"),
                         binlog_value("Product 1 description"),
-                        binlog_value(9.99)
+                        binlog_value("9.9900")
                     ]))
                 ),
                 (
@@ -126,7 +142,7 @@ mod tests {
                         binlog_value(2),
                         binlog_value("Product 2"),
                         binlog_value("Product 2 description"),
-                        binlog_value(99.99)
+                        binlog_value("99.9900")
                     ]))
                 )
             ],

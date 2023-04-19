@@ -4,6 +4,7 @@ use mysql_async::binlog::EventType;
 use mysql_async::prelude::Queryable;
 use mysql_async::Error as MySQLError;
 use mysql_async::{BinlogDumpFlags, BinlogRequest, BinlogStream, Conn, Row};
+use mysql_common::binlog::events::RowsEventData;
 use mysql_common::proto::MySerialize;
 use mysql_common::value::Value;
 use std::borrow::Cow;
@@ -75,12 +76,51 @@ async fn it_reads_changes_in_mysql() -> Result<(), MySQLError> {
         .await?;
 
     fixture
+        .insert_into(
+            "entity_with_multiple_json",
+            ["entity_id", "store_id", "first_column", "second_column"],
+            vec![
+                (
+                    1,
+                    0,
+                    r#"["red", "blue", "purple"]"#,
+                    r#"{"flag": false, "featured": true, "labels": ["red", "blue", "purple"]}"#,
+                ),
+                (
+                    2,
+                    0,
+                    r#"["green", "grey", "black"]"#,
+                    r#"{"flag": true, "featured": false, "labels": ["red", "blue", "purple"]}"#,
+                ),
+            ],
+        )
+        .await?;
+
+    fixture
         .execute_queries(vec![
             r#"START TRANSACTION"#,
             r#"UPDATE entity SET name = 'Awesome Product 2' WHERE entity_id = 2"#,
             r#"UPDATE entity SET price = 99.8 WHERE entity_id = 1"#,
             r#"DELETE FROM entity_int WHERE entity_id = 1 and store_id = 1 and attribute_id = 1"#,
             r#"UPDATE entity_json SET value = JSON_SET(value, '$.season', '["winter", "spring"]')"#,
+            r#"UPDATE entity_with_multiple_json 
+                SET second_column = JSON_SET(
+                    second_column, '$.featured', 'false'
+                ) 
+                WHERE entity_id = 1
+            "#,
+            r#"UPDATE entity_with_multiple_json 
+                SET second_column = JSON_SET(
+                    second_column, '$.featured', 'true'
+                ) 
+                WHERE entity_id = 2
+            "#,
+            r#"UPDATE entity_with_multiple_json 
+                SET first_column = JSON_SET(
+                    first_column, '$.featured', '["red", "blue"]'
+                ) 
+                WHERE entity_id = 1
+            "#,
             r#"COMMIT"#,
         ])
         .await?;
@@ -127,6 +167,45 @@ async fn it_reads_changes_in_mysql() -> Result<(), MySQLError> {
                 ))
                 .or_insert(vec![]);
             table_event_rows.push(Vec::from(event.data()));
+
+            let rows_event = match event.read_data()? {
+                Some(EventData::RowsEvent(e)) => e,
+                Some(e) => {
+                    println!("{e:?}");
+                    continue;
+                }
+                _ => continue,
+            };
+
+            for row in rows_event.rows(&table) {
+                match row {
+                    Ok((Some(left), Some(right))) => {
+                        println!(
+                            "Table {}: \n Before: {:?} \n After: {:?} \n",
+                            table.table_name(),
+                            left.unwrap(),
+                            right.unwrap()
+                        )
+                    }
+                    Ok((None, Some(right))) => {
+                        println!(
+                            "Table {}: \n After: {:?} \n",
+                            table.table_name(),
+                            right.unwrap()
+                        )
+                    }
+
+                    Ok((Some(left), None)) => {
+                        println!(
+                            "Table {}: \n Before: {:?} \n",
+                            table.table_name(),
+                            left.unwrap()
+                        )
+                    }
+
+                    _ => continue,
+                }
+            }
         }
     }
 

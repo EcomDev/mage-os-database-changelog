@@ -1,2 +1,2 @@
 [mysqld]
-binlog-row-image=minimal
+binlog-row-image=noblob
