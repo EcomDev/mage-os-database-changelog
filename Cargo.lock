@@ -891,7 +891,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mage_os_database_changelog"
+name = "mage-os-database-changelog"
 version = "0.1.0"
 dependencies = [
  "bitvec",
@@ -899,6 +899,8 @@ dependencies = [
  "mysql_async",
  "mysql_common",
  "phf",
+ "serde",
+ "serde_json",
  "smallvec",
  "thiserror",
  "tokio",

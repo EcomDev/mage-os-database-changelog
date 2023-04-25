@@ -6,6 +6,7 @@ services:
     env_file: test_env/mysql.env
     volumes:
       - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+    mem_limit: 3G
   percona57min:
     image: percona/percona-server:5.7
     ports:
@@ -14,6 +15,7 @@ services:
     volumes:
       - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
       - ./test_env/binlog-partial.cnf:/etc/my.cnf.d/binlog-partial.cnf
+    mem_limit: 3G
   percona8:
     image: percona/percona-server:8.0
     ports:
@@ -21,6 +23,7 @@ services:
     env_file: test_env/mysql.env
     volumes:
       - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
+    mem_limit: 2G
   percona8min:
     image: percona/percona-server:8.0
     ports:
@@ -30,3 +33,4 @@ services:
       - ./test_env/binlog.cnf:/etc/my.cnf.d/binlog.cnf
       - ./test_env/binlog-partial.cnf:/etc/my.cnf.d/binlog-partial.cnf
       - ./test_env/binlog-partial-json.cnf:/etc/my.cnf.d/binlog-partial-json.cnf
+    mem_limit: 2G

@@ -1,16 +1,24 @@
 use mysql_async::prelude::*;
 use mysql_async::Error;
 use mysql_async::{BinlogStream, Conn};
+use mysql_common::binlog::events::TableMapEvent;
+use mysql_common::frunk::labelled::chars::{e, s};
 use mysql_common::packets::binlog_request::BinlogRequest;
 use mysql_common::packets::BinlogDumpFlags;
 use mysql_common::params::Params;
 use mysql_common::row::Row;
 use mysql_common::value::Value;
 use std::borrow::Cow;
+use std::cell::OnceCell;
 use std::fmt::format;
+use std::iter::Once;
+use std::os::linux::raw::stat;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, OnceLock};
 
 pub struct Fixture {
     conn: Conn,
+    database_name: Option<(&'static str, usize)>,
 }
 
 static DATABASE_SCHEMA: [&'static str; 4] = [
@@ -51,29 +59,62 @@ static DATABASE_SCHEMA: [&'static str; 4] = [
         )"#,
 ];
 
+static DATABASE_NUMBER: OnceLock<AtomicUsize> = OnceLock::new();
+
 impl Fixture {
-    pub async fn create_with_database(database: &'static str) -> Result<Self, Error> {
+    pub async fn create_with_database(prefix_database: &'static str) -> Result<Self, Error> {
         let mut connection = create_connection().await?;
+        let database_index = DATABASE_NUMBER.get_or_init(Default::default);
+        let database_index = database_index.fetch_add(1, Ordering::Relaxed);
+
         connection
-            .query_drop(format!("DROP DATABASE IF EXISTS {database}"))
+            .query_drop(format!(
+                "DROP DATABASE IF EXISTS {prefix_database}{database_index}"
+            ))
             .await?;
         connection
-            .query_drop(format!("CREATE DATABASE {database}"))
+            .query_drop(format!("CREATE DATABASE {prefix_database}{database_index}"))
             .await?;
 
-        connection.query_drop(format!("USE {database}")).await?;
+        connection
+            .query_drop(format!("USE {prefix_database}{database_index}"))
+            .await?;
 
         for query in DATABASE_SCHEMA {
             connection.query_drop(query).await?;
         }
 
-        Ok(Self { conn: connection })
+        Ok(Self {
+            conn: connection,
+            database_name: Some((prefix_database, database_index)),
+        })
     }
 
-    pub async fn create() -> Result<Self, Error> {
+    pub async fn copy(&self) -> Result<Self, Error> {
         Ok(Self {
             conn: create_connection().await?,
+            database_name: self.database_name.clone(),
         })
+    }
+
+    pub fn database_name_filter(&self, table: &TableMapEvent) -> bool {
+        match self.database_name {
+            Some((prefix, index)) => table
+                .database_name()
+                .eq_ignore_ascii_case(&format!("{prefix}{index}")),
+            _ => true,
+        }
+    }
+
+    pub async fn cleanup(mut self) -> Result<(), Error> {
+        match self.database_name {
+            Some((prefix, index)) => {
+                self.conn
+                    .query_drop(format!("DROP DATABASE {prefix}{index}"))
+                    .await
+            }
+            None => Ok(()),
+        }
     }
 
     pub async fn execute_queries(

@@ -14,5 +14,6 @@ pub(crate) mod test_fixture;
 pub const BUFFER_STACK_SIZE: usize = 64;
 
 pub use reader::ReplicationReader;
+pub use rows::{SimpleBinaryRow, SimpleBinaryRowIter};
 
 pub trait ReplicationObserver {}

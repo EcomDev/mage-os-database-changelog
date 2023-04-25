@@ -134,8 +134,6 @@ impl BinaryTable {
         row_set_columns: &BitSlice<u8>,
         buffer: &mut ParseBuf,
     ) -> IoResult<MappedBitSet> {
-        let total_columns = self.column_types.len();
-
         let nullable_bits: &[u8] = buffer.parse((row_set_columns.count_ones() + 7) / 8)?;
         let mut nullable_bit_slice = BitSlice::<u8>::from_slice(nullable_bits)
             .into_iter()
@@ -156,6 +154,7 @@ impl BinaryTable {
     }
 }
 
+#[derive(Default)]
 pub struct MappedBitSet(BitVec<u8>);
 
 impl MappedBitSet {
@@ -174,7 +173,7 @@ impl MappedBitSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::replication::test_fixture::{table_event, Fixture};
+    use crate::replication::test_fixture::Fixture;
     use bitvec::macros::internal::funty::Fundamental;
     use mysql_common::binlog::consts::BinlogVersion;
     use mysql_common::binlog::events::FormatDescriptionEvent;
