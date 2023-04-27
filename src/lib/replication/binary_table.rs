@@ -21,8 +21,6 @@ pub struct BinaryTable {
     column_metadata: SmallVec<[Option<Vec<u8>>; BUFFER_STACK_SIZE]>,
 }
 
-impl BinaryTable {}
-
 impl BinaryTable {
     pub fn from_table_map_event(table_map_event: &TableMapEvent) -> Self {
         let column_count = table_map_event.columns_count() as usize;

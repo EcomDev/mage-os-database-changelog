@@ -106,6 +106,17 @@ impl Fixture {
         }
     }
 
+    pub async fn create_connection() -> Result<Conn, Error> {
+        create_connection().await
+    }
+
+    pub fn database_name(&self) -> Option<Cow<str>> {
+        match self.database_name {
+            Some((prefix, index)) => Some(Cow::Owned(format!("{prefix}{index}"))),
+            None => None,
+        }
+    }
+
     pub async fn cleanup(mut self) -> Result<(), Error> {
         match self.database_name {
             Some((prefix, index)) => {

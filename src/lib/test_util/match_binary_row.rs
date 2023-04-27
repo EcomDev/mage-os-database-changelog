@@ -1,4 +1,4 @@
-use crate::replication::{SimpleBinaryRow, BUFFER_STACK_SIZE};
+use crate::replication::{BinaryRow, BUFFER_STACK_SIZE};
 use mysql_common::binlog::jsonb;
 use mysql_common::binlog::jsondiff::{JsonDiff, JsonDiffOperation};
 use mysql_common::binlog::value::{self, BinlogValue};
@@ -39,7 +39,7 @@ pub struct CompareBinaryRow {
 #[doc(hidden)]
 pub enum MatchingBinaryRow {
     None,
-    SimpleBinaryRow(SimpleBinaryRow),
+    SimpleBinaryRow(BinaryRow),
     CompareBinaryRow(CompareBinaryRow),
 }
 
@@ -114,8 +114,8 @@ impl PartialEq<MatchingBinaryRow> for MatchingBinaryRow {
     }
 }
 
-impl From<SimpleBinaryRow> for MatchingBinaryRow {
-    fn from(value: SimpleBinaryRow) -> Self {
+impl From<BinaryRow> for MatchingBinaryRow {
+    fn from(value: BinaryRow) -> Self {
         MatchingBinaryRow::SimpleBinaryRow(value)
     }
 }
@@ -143,8 +143,8 @@ impl JsonMatch {
     }
 }
 
-impl PartialEq<SimpleBinaryRow> for CompareBinaryRow {
-    fn eq(&self, other: &SimpleBinaryRow) -> bool {
+impl PartialEq<BinaryRow> for CompareBinaryRow {
+    fn eq(&self, other: &BinaryRow) -> bool {
         // Check if the lengths of the values are the same
         other.matches(self.values.iter())
     }
@@ -239,78 +239,3 @@ impl_into_binlog!(i32);
 impl_into_binlog!(u64);
 impl_into_binlog!(i64);
 impl_into_binlog!(&str);
-
-#[macro_export]
-macro_rules! binlog_null {
-    () => {
-        (crate::test_util::NullValue)
-    };
-}
-
-#[macro_export]
-macro_rules! binlog_none {
-    () => {
-        (crate::test_util::NoneValue)
-    };
-}
-
-#[macro_export]
-macro_rules! binlog_json {
-    ($path:expr, $operation:expr, $value:expr) => {
-        (crate::test_util::JsonMatch::new($path, $operation, $value))
-    };
-}
-
-#[macro_export]
-macro_rules! binlog_row {
-    ($($value:expr),+) => {
-        (crate::replication::SimpleBinaryRow::new(&[$($value.into_binlog_value()),+]))
-    };
-}
-
-#[macro_export]
-macro_rules! partial_binlog_row {
-    ($($value:expr),+) => {
-        (crate::test_util::CompareBinaryRow::new(&[$($value.into()),+]))
-    };
-}
-
-#[macro_export]
-macro_rules! assert_equals_binlog_iter {
-    ($actual:expr, $($expected:expr),+) => {
-        use crate::test_util::MatchingBinaryRow;
-        let mut expected_rows: Vec<(MatchingBinaryRow, MatchingBinaryRow)> = Vec::new();
-        $(expected_rows.push($expected);)+;
-
-        assert_eq!(
-            $actual.map(|v| match v.unwrap() {
-                (Some(left), Some(right)) => (left.into(), right.into()),
-                (None, Some(right)) => (MatchingBinaryRow::None, right.into()),
-                (Some(left), None) => (left.into(), MatchingBinaryRow::None),
-                (None, None) => (MatchingBinaryRow::None, MatchingBinaryRow::None)
-            }).collect::<Vec<(MatchingBinaryRow, MatchingBinaryRow)>>(),
-            expected_rows
-        );
-    };
-}
-
-#[macro_export]
-macro_rules! assert_after_binlog_row {
-    ($actual:expr, $($expected:expr),+) => {
-        crate::assert_equals_binlog_iter!($actual, $((crate::test_util::MatchingBinaryRow::None, $expected.into())),+)
-    };
-}
-
-#[macro_export]
-macro_rules! assert_before_binlog_row {
-    ($actual:expr, $($expected:expr),+) => {
-        crate::assert_equals_binlog_iter!($actual, $(($expected.into(), crate::test_util::MatchingBinaryRow::None)),+)
-    };
-}
-
-#[macro_export]
-macro_rules! assert_binlog_row {
-    ($actual:expr, $($expected:expr),+) => {
-        crate::assert_equals_binlog_iter!($actual, $(($expected.0.into(), $expected.1.into())),+)
-    };
-}

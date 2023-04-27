@@ -2,7 +2,6 @@ use bitvec::prelude::*;
 use mysql_common::binlog::events::{RowsEventData, TableMapEvent};
 use mysql_common::binlog::row::BinlogRowValueOptions;
 use mysql_common::binlog::value::BinlogValue;
-use mysql_common::frunk::labelled::chars::b;
 use mysql_common::io::ParseBuf;
 use mysql_common::misc::raw::int::LenEnc;
 use mysql_common::misc::raw::RawInt;
@@ -10,52 +9,17 @@ use mysql_common::proto::MyDeserialize;
 use mysql_common::value::Value;
 
 use crate::replication::binary_table::{BinaryTable, MappedBitSet};
-use crate::replication::BUFFER_STACK_SIZE;
-use smallvec::SmallVec;
+use crate::replication::row::BinaryRow;
 
-#[derive(Debug, PartialEq)]
-pub struct SimpleBinaryRow {
-    values: SmallVec<[Option<BinlogValue<'static>>; BUFFER_STACK_SIZE]>,
-}
-
-impl SimpleBinaryRow {
-    pub fn new(values: &[Option<BinlogValue<'static>>]) -> Self {
-        Self {
-            values: values.into(),
-        }
-    }
-
-    pub fn matches(
-        &self,
-        other: impl Iterator<Item = impl PartialEq<Option<BinlogValue<'static>>>>,
-    ) -> bool {
-        match other.size_hint() {
-            (_, Some(length)) if self.values.len() == length => {}
-            _ => return false,
-        }
-
-        let (flag, _) = other.fold((true, 0), |(flag, index), item| {
-            let flag = flag && item.eq(&self.values[index]);
-            (flag, index + 1)
-        });
-
-        flag
-    }
-
-    pub fn values(&self) -> &SmallVec<[Option<BinlogValue<'static>>; BUFFER_STACK_SIZE]> {
-        &self.values
-    }
-}
-
-pub struct SimpleBinaryRowIter<'a> {
+pub struct BinaryRowIter<'a> {
     rows_event: &'a RowsEventData<'a>,
     table: &'a BinaryTable,
     data: ParseBuf<'a>,
 }
 
-impl<'a> SimpleBinaryRowIter<'a> {
+impl<'a> BinaryRowIter<'a> {
     fn new(rows_event: &'a RowsEventData<'a>, table: &'a BinaryTable, data: ParseBuf<'a>) -> Self {
-        SimpleBinaryRowIter {
+        BinaryRowIter {
             rows_event,
             table,
             data,
@@ -63,12 +27,12 @@ impl<'a> SimpleBinaryRowIter<'a> {
     }
 }
 
-impl<'a> SimpleBinaryRowIter<'a> {
+impl<'a> BinaryRowIter<'a> {
     fn parse_row_image(
         &mut self,
         supports_partial: bool,
         columns: Option<&'a BitSlice<u8>>,
-    ) -> std::io::Result<Option<SimpleBinaryRow>> {
+    ) -> std::io::Result<Option<BinaryRow>> {
         match columns {
             Some(columns) => {
                 let ctx = (columns, supports_partial, self.table);
@@ -83,8 +47,8 @@ impl<'a> SimpleBinaryRowIter<'a> {
     }
 }
 
-impl<'a> Iterator for SimpleBinaryRowIter<'a> {
-    type Item = std::io::Result<(Option<SimpleBinaryRow>, Option<SimpleBinaryRow>)>;
+impl<'a> Iterator for BinaryRowIter<'a> {
+    type Item = std::io::Result<(Option<BinaryRow>, Option<BinaryRow>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.data.is_empty() {
@@ -111,58 +75,6 @@ impl<'a> Iterator for SimpleBinaryRowIter<'a> {
     }
 }
 
-impl<'de> MyDeserialize<'de> for SimpleBinaryRow {
-    const SIZE: Option<usize> = None;
-
-    type Ctx = (&'de BitSlice<u8>, bool, &'de BinaryTable);
-
-    fn deserialize(
-        (columns, have_shared_image, table_info): Self::Ctx,
-        buf: &mut ParseBuf<'de>,
-    ) -> std::io::Result<Self> {
-        let mut values = SmallVec::with_capacity(table_info.num_columns());
-
-        let partial_columns: MappedBitSet = match have_shared_image {
-            true => {
-                let value_options = *buf.parse::<RawInt<LenEnc>>(())?;
-
-                match value_options & BinlogRowValueOptions::PARTIAL_JSON_UPDATES as u64 {
-                    0.. => table_info.partial_column_bits(buf)?,
-                    _ => MappedBitSet::default(),
-                }
-            }
-            false => MappedBitSet::default(),
-        };
-
-        let nullable_columns = table_info.null_column_bits(columns, buf)?;
-        for index in 0..table_info.num_columns() {
-            let column_type = table_info.get_column_type(index)?;
-            let column_metadata = table_info.get_column_metadata(index)?;
-
-            values.push(
-                match (
-                    nullable_columns.is_set(index),
-                    columns.get(index).as_deref(),
-                ) {
-                    (false, Some(&true)) => Some(
-                        buf.parse::<BinlogValue>((
-                            column_type,
-                            column_metadata,
-                            table_info.is_unsigned(index),
-                            partial_columns.is_set(index),
-                        ))?
-                        .into_owned(),
-                    ),
-                    (true, _) => Some(BinlogValue::Value(Value::NULL)),
-                    other => None,
-                },
-            )
-        }
-
-        return Ok(Self { values });
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -183,8 +95,7 @@ mod tests {
         let (table, event) = fixture.row_event("write_entity");
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_after_binlog_row!(
             simple_binary_rows,
@@ -201,8 +112,7 @@ mod tests {
 
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_after_binlog_row!(
             simple_binary_rows,
@@ -218,8 +128,7 @@ mod tests {
         let (table, event) = fixture.row_event("delete_entity_int");
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_before_binlog_row!(simple_binary_rows, binlog_row!(2, 1, 1, 1, 0));
     }
@@ -232,8 +141,7 @@ mod tests {
 
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_binlog_row!(
             simple_binary_rows,
@@ -252,8 +160,7 @@ mod tests {
 
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_binlog_row!(
             simple_binary_rows,
@@ -300,8 +207,7 @@ mod tests {
 
         let table = BinaryTable::from_table_map_event(&table);
 
-        let simple_binary_rows =
-            SimpleBinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
+        let simple_binary_rows = BinaryRowIter::new(&event, &table, ParseBuf(event.rows_data()));
 
         assert_binlog_row!(
             simple_binary_rows,

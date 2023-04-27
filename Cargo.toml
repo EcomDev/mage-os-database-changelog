@@ -29,6 +29,9 @@ all-features = true
 name = "mage_os_database_changelog"
 path = "src/lib/mod.rs"
 
+[features]
+test_util = []
+
 [[bin]]
 name = "database-changelog"
 path = "src/main.rs"
