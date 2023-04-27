@@ -65,7 +65,6 @@ impl EventObserver for EntityObserver {
 
 #[cfg(test)]
 mod tests {
-    use crate::binlog_row;
     use crate::change::Change;
     use crate::error::Error;
     use crate::event::observer::entity::EntityObserver;
@@ -82,17 +81,6 @@ mod tests {
             (vec![$($name.into()),*].into())
         }
     }
-
-    macro_rules! process_event(
-        ($observer:expr, $schema:expr, [$($event:expr),+]) => {
-            let observer = $observer;
-            let schema = $schema;
-            $(observer.process_event(&$event, &schema).await?;)+
-
-            drop(observer);
-
-        }
-    );
 
     #[tokio::test]
     async fn reports_included_columns_on_insert_event() -> Result<(), Error> {

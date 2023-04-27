@@ -37,7 +37,7 @@ mod tests {
     use crate::event::observer::EventObserver;
     use crate::event::Event;
     use crate::test_util::{IntoBinlogValue, TestTableSchema};
-    use crate::{binlog_row, TableSchema};
+    use crate::TableSchema;
     use std::io::ErrorKind;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::Arc;

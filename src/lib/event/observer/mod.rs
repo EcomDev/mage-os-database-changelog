@@ -1,3 +1,5 @@
+#[macro_use]
+mod macros;
 mod chain_observer;
 mod entity;
 

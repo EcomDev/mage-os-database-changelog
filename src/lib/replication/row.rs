@@ -146,7 +146,6 @@ impl BinaryRow {
 mod tests {
     use crate::error::Error;
     use crate::test_util::{IntoBinlogValue, TestTableSchema};
-    use crate::{binlog_none, binlog_row};
     use mysql_common::binlog::value::BinlogValue;
 
     #[test]
