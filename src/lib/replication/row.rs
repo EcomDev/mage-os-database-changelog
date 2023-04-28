@@ -210,12 +210,6 @@ mod tests {
     }
 
     fn table_schema() -> TestTableSchema {
-        let table = TestTableSchema::new("entity")
-            .with_column("entity_id", 0)
-            .with_column("name", 1)
-            .with_column("sku", 2)
-            .with_column("price", 3)
-            .with_primary_key("entity_id");
-        table
+        test_table!("entity", "entity_id", ["entity_id", "name", "sku", "price"])
     }
 }

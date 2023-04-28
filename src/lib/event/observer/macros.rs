@@ -8,3 +8,11 @@ macro_rules! process_event(
 
     }
 );
+
+macro_rules! updated_field_macro {
+    ($update:expr, $tx:expr, $table:expr, $entity_id:expr,  [$($field:expr),+]) => {
+        $(if $update.is_changed_column($field, $table) {
+            $tx.send(crate::change::Change::FieldUpdated($field, $entity_id)).unwrap();
+        })+;
+    };
+}

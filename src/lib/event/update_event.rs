@@ -61,9 +61,7 @@ mod tests {
             binlog_row!("sku1", "Name After"),
         );
 
-        let schema = TestTableSchema::new("entity")
-            .with_column("sku", 0)
-            .with_column("name", 1);
+        let schema = test_table!("entity", ["sku", "name"]);
 
         assert_eq!(
             updates.parse::<String>("name", &schema).unwrap(),
@@ -78,9 +76,7 @@ mod tests {
             binlog_row!("sku1", "Name After"),
         );
 
-        let schema = TestTableSchema::new("entity")
-            .with_column("sku", 0)
-            .with_column("name", 1);
+        let schema = test_table!("entity", ["sku", "name"]);
 
         assert_eq!(
             updates.parse_changed::<String>("name", &schema).unwrap(),
@@ -92,9 +88,7 @@ mod tests {
     fn takes_only_changed_value_from_after_row() {
         let updates = UpdateEvent::new(binlog_row!(1, "Name Before"), binlog_row!(1, "Name After"));
 
-        let schema = TestTableSchema::new("entity")
-            .with_column("entity_id", 0)
-            .with_column("name", 1);
+        let schema = test_table!("entity", ["entity_id", "name"]);
 
         assert_eq!(
             vec![

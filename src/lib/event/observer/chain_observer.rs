@@ -36,16 +36,9 @@ mod tests {
     use crate::event::observer::chain_observer::ChainObserver;
     use crate::event::observer::EventObserver;
     use crate::event::Event;
-    use crate::test_util::{IntoBinlogValue, TestTableSchema};
+    use crate::test_util::{IntoBinlogValue, ObserverSpy, TestTableSchema};
     use crate::TableSchema;
     use std::io::ErrorKind;
-    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-    use std::sync::Arc;
-
-    #[derive(Default, Clone)]
-    struct ObserverSpy {
-        times_executed: Arc<AtomicUsize>,
-    }
 
     struct FailureObserver;
 
@@ -62,17 +55,6 @@ mod tests {
         }
     }
 
-    impl EventObserver for ObserverSpy {
-        async fn process_event(
-            &self,
-            _event: &Event,
-            _table: &impl TableSchema,
-        ) -> Result<(), Error> {
-            self.times_executed.fetch_add(1, Ordering::Relaxed);
-            Ok(())
-        }
-    }
-
     #[tokio::test]
     async fn executes_both_observers_one_after_another() {
         let first = ObserverSpy::default();
@@ -80,15 +62,15 @@ mod tests {
 
         let chain = ChainObserver::new(first.clone(), second.clone());
 
-        let schema = TestTableSchema::new("entity");
+        let schema = test_table!("entity");
 
         chain
             .process_event(&Event::Insert(binlog_row!(1, 2, 3)), &schema)
             .await
             .unwrap();
 
-        assert_eq!(first.times_executed.load(Ordering::Relaxed), 1);
-        assert_eq!(second.times_executed.load(Ordering::Relaxed), 1);
+        assert_eq!(first.times_executed(), 1);
+        assert_eq!(second.times_executed(), 1);
     }
 
     #[tokio::test]
@@ -96,13 +78,13 @@ mod tests {
         let second = ObserverSpy::default();
         let chain = ChainObserver::new(FailureObserver, second.clone());
 
-        let schema = TestTableSchema::new("entity");
+        let schema = test_table!("entity");
 
         chain
             .process_event(&Event::Insert(binlog_row!(1, 2, 3)), &schema)
             .await
             .unwrap_err();
 
-        assert_eq!(second.times_executed.load(Ordering::Relaxed), 0);
+        assert_eq!(second.times_executed(), 0);
     }
 }

@@ -63,3 +63,28 @@ macro_rules! assert_binlog_row {
         assert_equals_binlog_iter!($actual, $(($expected.0.into(), $expected.1.into())),+)
     };
 }
+
+macro_rules! table_binary_row {
+    ($table:expr, {$($name:ident : $value:expr),+}) => {
+        $table.binary_row([
+            $(("$name", $value.into_binlog_value().unwrap())),+
+        ])
+    };
+}
+
+macro_rules! test_table {
+    ($name:expr) => {
+        crate::test_util::TestTableSchema::new($name, &[])
+    };
+    ($name:expr, $primary:expr, [$($column:expr),*]) => {
+        crate::test_util::TestTableSchema::with_primary($name,
+            &[$($column),*],
+            Some($primary)
+        )
+    };
+    ($name:expr, [$($column:expr),*]) => {
+        crate::test_util::TestTableSchema::new($name,
+            &[$($column),*]
+        )
+    };
+}
