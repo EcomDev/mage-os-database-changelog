@@ -48,7 +48,7 @@ impl<'a> SchemaInformation<'a> {
         Ok(())
     }
 
-    pub(crate) fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.column_position.clear();
         self.generated_primary_key.clear();
     }

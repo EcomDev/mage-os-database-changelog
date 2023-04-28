@@ -1,5 +1,4 @@
-use crate::schema::info::SchemaInformation;
-use crate::TableSchema;
+use crate::schema::{info::SchemaInformation, TableSchema};
 
 use std::borrow::Cow;
 
@@ -41,9 +40,7 @@ impl TableSchema for InfoSchemaTable<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::schema::info::SchemaInformation;
-    use crate::schema::info_table::InfoSchemaTable;
-    use crate::TableSchema;
+    use crate::schema::{info::SchemaInformation, info_table::InfoSchemaTable, TableSchema};
 
     #[test]
     fn when_table_does_not_exists_in_schema_info_nothing_is_available_in_the_table() {

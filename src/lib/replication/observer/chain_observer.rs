@@ -1,7 +1,7 @@
+use super::EventObserver;
 use crate::error::Error;
-use crate::event::observer::EventObserver;
-use crate::event::Event;
-use crate::TableSchema;
+use crate::replication::Event;
+use crate::schema::TableSchema;
 
 pub struct ChainObserver<L, R> {
     left: L,
@@ -32,12 +32,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::error::Error;
-    use crate::event::observer::chain_observer::ChainObserver;
-    use crate::event::observer::EventObserver;
-    use crate::event::Event;
+    use super::*;
     use crate::test_util::{IntoBinlogValue, ObserverSpy};
-    use crate::TableSchema;
     use std::io::ErrorKind;
 
     struct FailureObserver;

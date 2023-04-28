@@ -1,7 +1,7 @@
+use super::EventObserver;
 use crate::error::Error;
-use crate::event::observer::EventObserver;
-use crate::event::Event;
-use crate::TableSchema;
+use crate::replication::Event;
+use crate::schema::TableSchema;
 
 pub trait FilterObserverPredicate {
     fn is_applicable(&self, table: &impl TableSchema) -> bool;
@@ -51,7 +51,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::Event;
+    use crate::replication::Event;
     use crate::test_util::*;
 
     #[tokio::test]

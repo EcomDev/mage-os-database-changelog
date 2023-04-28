@@ -1,18 +1,12 @@
 use super::BUFFER_STACK_SIZE;
 
-
-
 use bitvec::prelude::{BitSlice, BitVec};
-use bitvec::slice::BitSliceIndex;
 use mysql_common::binlog::events::{OptionalMetadataField, TableMapEvent};
 use mysql_common::constants::ColumnType;
 use mysql_common::io::ParseBuf;
 use smallvec::SmallVec;
 
-
 use std::io::{Error as IoError, ErrorKind, Result as IoResult};
-
-
 
 pub struct BinaryTable {
     column_types: SmallVec<[Option<ColumnType>; BUFFER_STACK_SIZE]>,
@@ -172,10 +166,7 @@ impl MappedBitSet {
 mod tests {
     use super::*;
     use crate::replication::test_fixture::Fixture;
-    
-    
-    
-    
+
     use std::io::ErrorKind;
 
     #[test]

@@ -1,6 +1,6 @@
 mod fixture;
 use fixture::Fixture;
-use mage_os_database_changelog::SchemaInformation;
+use mage_os_database_changelog::schema::SchemaInformation;
 use mysql_async::Error as MySQLError;
 
 #[tokio::test]

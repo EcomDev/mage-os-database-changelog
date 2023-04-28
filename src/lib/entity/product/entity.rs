@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::event::observer::EventObserver;
-use crate::event::Event;
 use crate::log::{ChangeLogSender, ProductChange};
-use crate::TableSchema;
+use crate::replication::Event;
+use crate::replication::EventObserver;
+use crate::schema::TableSchema;
 
 #[derive(Clone)]
 pub struct ProductEntityObserver<R> {
@@ -66,7 +66,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::{Event, UpdateEvent};
+    use crate::replication::{Event, UpdateEvent};
     use crate::test_util::{IntoBinlogValue, TestChangeLogSender};
 
     #[tokio::test]

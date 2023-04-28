@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::replication::binary_table::{BinaryTable, MappedBitSet};
 use crate::replication::BUFFER_STACK_SIZE;
-use crate::TableSchema;
+use crate::schema::TableSchema;
 use bitvec::slice::BitSlice;
 use mysql_common::binlog::row::BinlogRowValueOptions;
 use mysql_common::binlog::value::BinlogValue;
@@ -32,11 +32,13 @@ impl<'de> MyDeserialize<'de> for BinaryRow {
 
         let partial_columns: MappedBitSet = match have_shared_image {
             true => {
-                let value_options = *buf.parse::<RawInt<LenEnc>>(())?;
+                let has_json_updates = ((*buf.parse::<RawInt<LenEnc>>(())?)
+                    & BinlogRowValueOptions::PARTIAL_JSON_UPDATES as u64)
+                    > 0;
 
-                match value_options & BinlogRowValueOptions::PARTIAL_JSON_UPDATES as u64 {
-                    0.. => table_info.partial_column_bits(buf)?,
-                    _ => MappedBitSet::default(),
+                match has_json_updates {
+                    true => table_info.partial_column_bits(buf)?,
+                    false => MappedBitSet::default(),
                 }
             }
             false => MappedBitSet::default(),
@@ -144,7 +146,7 @@ impl BinaryRow {
 
 #[cfg(test)]
 mod tests {
-    
+
     use crate::test_util::{IntoBinlogValue, TestTableSchema};
     use mysql_common::binlog::value::BinlogValue;
 

@@ -1,7 +1,7 @@
 use crate::error::Error;
-use crate::event::Event;
-use crate::event::EventObserver;
-use crate::TableSchema;
+use crate::replication::Event;
+use crate::replication::EventObserver;
+use crate::schema::TableSchema;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 

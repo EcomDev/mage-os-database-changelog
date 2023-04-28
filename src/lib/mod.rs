@@ -3,12 +3,9 @@
 #[cfg(any(feature = "test_util", test))]
 #[macro_use]
 pub mod test_util;
-
-pub mod event;
+#[macro_use]
 pub mod replication;
-
-mod error;
-mod log;
-mod schema;
-
-pub use schema::{SchemaInformation, TableSchema};
+pub mod entity;
+pub mod error;
+pub mod log;
+pub mod schema;

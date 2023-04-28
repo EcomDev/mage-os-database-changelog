@@ -32,7 +32,7 @@ macro_rules! assert_equals_binlog_iter {
     ($actual:expr, $($expected:expr),+) => {
         use crate::test_util::MatchingBinaryRow;
         let mut expected_rows: Vec<(MatchingBinaryRow, MatchingBinaryRow)> = Vec::new();
-        $(expected_rows.push($expected);)+;
+        $(expected_rows.push($expected);)+
 
         assert_eq!(
             $actual.map(|v| match v.unwrap() {
