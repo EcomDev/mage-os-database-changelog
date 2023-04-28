@@ -10,10 +10,8 @@ pub struct ProductEntityObserver<R> {
 }
 
 impl<R> ProductEntityObserver<R> {
-    pub fn new(log_recorder: R) -> Self {
-        Self {
-            recorder: log_recorder,
-        }
+    pub fn new(recorder: R) -> Self {
+        Self { recorder }
     }
 }
 
