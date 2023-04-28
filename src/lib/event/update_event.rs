@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::replication::BinaryRow;
 use crate::TableSchema;
-use mysql_common::binlog::value::BinlogValue;
+
 use mysql_common::value::convert::FromValue;
 
 pub struct UpdateEvent {
@@ -48,10 +48,10 @@ impl UpdateEvent {
 
 #[cfg(test)]
 mod tests {
-    use crate::error::Error;
+    
     use crate::event::update_event::UpdateEvent;
-    use crate::test_util::{IntoBinlogValue, TestTableSchema};
-    use crate::*;
+    use crate::test_util::{IntoBinlogValue};
+    
 
     #[test]
     fn takes_value_from_before_column() {

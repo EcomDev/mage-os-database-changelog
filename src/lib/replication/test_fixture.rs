@@ -1,14 +1,13 @@
 use mysql_common::binlog::consts::{BinlogVersion, EventType};
 use mysql_common::binlog::events::{
-    BinlogEventHeader, FormatDescriptionEvent, RowsEvent, RowsEventData, TableMapEvent,
-    WriteRowsEvent,
+    BinlogEventHeader, FormatDescriptionEvent, RowsEventData, TableMapEvent,
 };
 use mysql_common::binlog::BinlogCtx;
-use mysql_common::frunk::labelled::chars::n;
+
 use mysql_common::io::ParseBuf;
 use phf::phf_map;
 use phf::Map;
-use std::cell::RefCell;
+
 
 static TABLE_DEFINITION_ENTITY: &[u8] = &[
     24, 1, 0, 0, 0, 0, 1, 0, 8, 116, 101, 115, 116, 95, 100, 98, 48, 0, 6, 101, 110, 116, 105, 116,

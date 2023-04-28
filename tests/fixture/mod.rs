@@ -2,19 +2,19 @@ use mysql_async::prelude::*;
 use mysql_async::Error;
 use mysql_async::{BinlogStream, Conn};
 use mysql_common::binlog::events::TableMapEvent;
-use mysql_common::frunk::labelled::chars::{e, s};
+
 use mysql_common::packets::binlog_request::BinlogRequest;
 use mysql_common::packets::BinlogDumpFlags;
-use mysql_common::params::Params;
+
 use mysql_common::row::Row;
 use mysql_common::value::Value;
 use std::borrow::Cow;
-use std::cell::OnceCell;
-use std::fmt::format;
-use std::iter::Once;
-use std::os::linux::raw::stat;
+
+
+
+
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::{OnceLock};
 
 pub struct Fixture {
     conn: Conn,

@@ -62,7 +62,7 @@ impl<'de> MyDeserialize<'de> for BinaryRow {
                         .into_owned(),
                     ),
                     (true, _) => Some(BinlogValue::Value(Value::NULL)),
-                    other => None,
+                    _other => None,
                 },
             )
         }
@@ -144,7 +144,7 @@ impl BinaryRow {
 
 #[cfg(test)]
 mod tests {
-    use crate::error::Error;
+    
     use crate::test_util::{IntoBinlogValue, TestTableSchema};
     use mysql_common::binlog::value::BinlogValue;
 
@@ -152,7 +152,7 @@ mod tests {
     fn takes_value_from_row_by_schema() {
         let table = table_schema();
 
-        let mut row = binlog_row!(1, "Name 1", "sku1", "10.00");
+        let row = binlog_row!(1, "Name 1", "sku1", "10.00");
 
         assert_eq!(row.parse::<String>("name", &table).unwrap(), "Name 1");
     }
@@ -161,7 +161,7 @@ mod tests {
     fn errors_when_column_is_not_in_schema() {
         let table = table_schema();
 
-        let mut row = binlog_row!(1, "Name 1", "sku1", "10.00");
+        let row = binlog_row!(1, "Name 1", "sku1", "10.00");
 
         assert_eq!(
             row.parse::<String>("updated_at", &table)
@@ -175,7 +175,7 @@ mod tests {
     fn errors_when_column_data_is_not_present() {
         let table = table_schema();
 
-        let mut row = binlog_row!(1, binlog_none!(), "sku1", "10.00");
+        let row = binlog_row!(1, binlog_none!(), "sku1", "10.00");
 
         assert_eq!(
             row.parse::<String>("name", &table).unwrap_err().to_string(),
@@ -187,7 +187,7 @@ mod tests {
     fn errors_when_column_value_is_not_parsable_into_type() {
         let table = table_schema();
 
-        let mut row = binlog_row!(1, "Name 1", "sku1", "10.00");
+        let row = binlog_row!(1, "Name 1", "sku1", "10.00");
 
         assert_eq!(
             row.parse::<u32>("name", &table).unwrap_err().to_string(),

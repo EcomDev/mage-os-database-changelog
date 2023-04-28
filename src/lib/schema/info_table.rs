@@ -1,6 +1,6 @@
 use crate::schema::info::SchemaInformation;
 use crate::TableSchema;
-use mysql_common::frunk::labelled::chars::c;
+
 use std::borrow::Cow;
 
 pub struct InfoSchemaTable<'a> {

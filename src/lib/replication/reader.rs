@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 use std::time::Duration;
 use mysql_async::{BinlogStream, Error};
-use mysql_async::binlog::events::{TableMapEvent, Event, RowsEvent};
-use mysql_async::binlog::events::RowsEventData::WriteRowsEvent;
+use mysql_async::binlog::events::{Event};
+
 use mysql_async::binlog::EventType;
 use tokio::time::timeout;
 use tokio_stream::StreamExt;
@@ -43,7 +43,7 @@ impl<'a> ReplicationReader<'a> {
         binlog_stream.close().await
     }
 
-    async fn process_binlog_event(&self, event: Event, binlog_stream: &BinlogStream, observer: &mut impl ReplicationObserver) {
+    async fn process_binlog_event(&self, event: Event, _binlog_stream: &BinlogStream, _observer: &mut impl ReplicationObserver) {
         match event.header().event_type() {
             Ok(EventType::WRITE_ROWS_EVENT | EventType::UPDATE_ROWS_EVENT | EventType::DELETE_ROWS_EVENT | EventType::PARTIAL_UPDATE_ROWS_EVENT ) => {
                 println!("{:?}", event);
@@ -54,7 +54,7 @@ impl<'a> ReplicationReader<'a> {
 
     }
 
-    fn read_event(event: Event) {
+    fn read_event(_event: Event) {
 
     }
 }

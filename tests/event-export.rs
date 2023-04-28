@@ -1,22 +1,22 @@
 #![feature(async_fn_in_trait)]
-use mysql_async::binlog::events::{Event, EventData, RotateEvent, RowsEvent, TableMapEvent};
+use mysql_async::binlog::events::{EventData, TableMapEvent};
 use mysql_async::binlog::EventType;
-use mysql_async::prelude::Queryable;
-use mysql_async::Error as MySQLError;
-use mysql_async::{BinlogDumpFlags, BinlogRequest, BinlogStream, Conn, Row};
-use mysql_common::binlog::events::RowsEventData;
-use mysql_common::proto::MySerialize;
-use mysql_common::value::Value;
-use std::borrow::Cow;
-use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap, HashMap};
-use std::error::Error;
-use std::fmt::format;
-use std::time::Duration;
 
-use mage_os_database_changelog::replication::{ReplicationObserver, ReplicationReader};
-use tokio::time::error::Elapsed;
-use tokio::time::timeout;
+use mysql_async::Error as MySQLError;
+
+
+
+
+
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap};
+
+
+
+
+use mage_os_database_changelog::replication::{ReplicationObserver};
+
+
 use tokio_stream::{self, StreamExt};
 
 mod fixture;
@@ -192,7 +192,7 @@ async fn print_binlog_events(
                 }
 
                 let table_name = format!("{}-{}", table.table_id(), table.table_name());
-                let mut entry = match table_binaries.entry(table_name) {
+                let entry = match table_binaries.entry(table_name) {
                     Entry::Occupied(_) => continue,
                     Entry::Vacant(entry) => entry,
                 };
@@ -206,7 +206,7 @@ async fn print_binlog_events(
     for event in events {
         if let Ok(Some(EventData::RowsEvent(rows_data))) = event.read_data() {
             let table = binlog_stream.get_tme(rows_data.table_id()).unwrap();
-            let mut table_event_rows = event_rows
+            let table_event_rows = event_rows
                 .entry(format!(
                     "{}-{:?}",
                     table.table_name(),

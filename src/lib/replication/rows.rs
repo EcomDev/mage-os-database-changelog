@@ -1,14 +1,14 @@
 use bitvec::prelude::*;
-use mysql_common::binlog::events::{RowsEventData, TableMapEvent};
-use mysql_common::binlog::row::BinlogRowValueOptions;
-use mysql_common::binlog::value::BinlogValue;
-use mysql_common::io::ParseBuf;
-use mysql_common::misc::raw::int::LenEnc;
-use mysql_common::misc::raw::RawInt;
-use mysql_common::proto::MyDeserialize;
-use mysql_common::value::Value;
+use mysql_common::binlog::events::{RowsEventData};
 
-use crate::replication::binary_table::{BinaryTable, MappedBitSet};
+
+use mysql_common::io::ParseBuf;
+
+
+
+
+
+use crate::replication::binary_table::{BinaryTable};
 use crate::replication::row::BinaryRow;
 
 pub struct BinaryRowIter<'a> {
@@ -81,10 +81,10 @@ mod tests {
     use crate::replication::binary_table::BinaryTable;
     use crate::replication::test_fixture::Fixture;
     use crate::test_util::*;
-    use crate::*;
-    use mysql_async::Value;
+    
+    
     use mysql_common::binlog::jsondiff::JsonDiffOperation;
-    use mysql_common::binlog::value::BinlogValue;
+    
     use mysql_common::io::ParseBuf;
     use serde_json::json;
 

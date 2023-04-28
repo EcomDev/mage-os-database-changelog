@@ -1,6 +1,6 @@
 use mysql_async::Error as MySQLError;
 use mysql_common::value::Value;
-use std::borrow::Cow;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
