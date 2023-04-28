@@ -1,23 +1,7 @@
 use crate::replication::BinaryRow;
 use crate::schema::TableSchema;
 use mysql_common::binlog::value::BinlogValue;
-use phf::{phf_map, Map};
-use std::borrow::Cow;
 use std::collections::HashMap;
-
-static TEST_TABLE_SCHEMA: Map<&'static str, TestTableSchema> = phf_map! {
-    "product" => test_table!(
-        "catalog_product_entity",
-        "entity_id",
-        ["entity_id", "attribute_set_id", "type_id", "sku", "has_options", "required_options", "created_at", "updated_at"]
-    ),
-    "category" => test_table!(
-        "catalog_category_entity",
-        "entity_id",
-        ["entity_id", "attribute_set_id", "parent_id", "created_at", "updated_at", "path", "position", "level", "children_count"]
-    ),
-
-};
 
 #[derive(Clone, Copy)]
 pub struct TestTableSchema {
@@ -84,14 +68,9 @@ impl TableSchema for TestTableSchema {
     }
 }
 
-pub fn table_schema(table: &'static str) -> &TestTableSchema {
-    TEST_TABLE_SCHEMA.get(table).unwrap()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::schema::TableSchema;
 
     #[test]
     fn empty_table_does_not_have_any_columns() {

@@ -36,7 +36,7 @@ mod tests {
     use crate::event::observer::chain_observer::ChainObserver;
     use crate::event::observer::EventObserver;
     use crate::event::Event;
-    use crate::test_util::{IntoBinlogValue, ObserverSpy, TestTableSchema};
+    use crate::test_util::{IntoBinlogValue, ObserverSpy};
     use crate::TableSchema;
     use std::io::ErrorKind;
 

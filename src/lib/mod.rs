@@ -7,8 +7,8 @@ pub mod test_util;
 pub mod event;
 pub mod replication;
 
-mod change;
 mod error;
+mod log;
 mod schema;
 
 pub use schema::{SchemaInformation, TableSchema};

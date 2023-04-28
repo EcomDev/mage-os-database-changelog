@@ -1,5 +1,4 @@
 use crate::error::Error;
-use crate::error::Error::ColumnNotFound;
 use crate::replication::BinaryRow;
 use crate::TableSchema;
 use mysql_common::binlog::value::BinlogValue;

@@ -64,14 +64,6 @@ macro_rules! assert_binlog_row {
     };
 }
 
-macro_rules! table_binary_row {
-    ($table:expr, {$($name:ident : $value:expr),+}) => {
-        $table.binary_row([
-            $(("$name", $value.into_binlog_value().unwrap())),+
-        ])
-    };
-}
-
 macro_rules! test_table {
     ($name:expr) => {
         crate::test_util::TestTableSchema::new($name, &[])

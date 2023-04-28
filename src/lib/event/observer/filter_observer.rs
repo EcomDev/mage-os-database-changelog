@@ -2,7 +2,6 @@ use crate::error::Error;
 use crate::event::observer::EventObserver;
 use crate::event::Event;
 use crate::TableSchema;
-use mysql_common::frunk::labelled::chars::e;
 
 pub trait FilterObserverPredicate {
     fn is_applicable(&self, table: &impl TableSchema) -> bool;

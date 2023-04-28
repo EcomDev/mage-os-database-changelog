@@ -1,11 +1,9 @@
 use crate::replication::{BinaryRow, BUFFER_STACK_SIZE};
-use mysql_common::binlog::jsonb;
 use mysql_common::binlog::jsondiff::{JsonDiff, JsonDiffOperation};
-use mysql_common::binlog::value::{self, BinlogValue};
+use mysql_common::binlog::value::BinlogValue;
 use mysql_common::value::Value;
 use smallvec::SmallVec;
-use std::borrow::Cow;
-use std::fmt::{Debug, Display, Formatter, Write};
+use std::fmt::{Debug, Formatter};
 
 #[doc(hidden)]
 pub struct NullValue;
@@ -57,7 +55,7 @@ impl Debug for MatchingBinaryRow {
                             Debug::fmt(&json, f)?;
                             f.write_str(")")?
                         }
-                        other => value.fmt(f)?,
+                        _ => value.fmt(f)?,
                     }
 
                     f.write_str(",")?
