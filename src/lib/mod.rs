@@ -1,6 +1,6 @@
 #![feature(async_fn_in_trait)]
 
-#[cfg(any(feature = "test_util", test))]
+#[cfg(any(test, feature = "test_util"))]
 #[macro_use]
 pub mod test_util;
 #[macro_use]

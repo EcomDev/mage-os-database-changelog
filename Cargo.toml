@@ -18,18 +18,15 @@ bitvec = "1.0.1"
 serde = "1.0.152"
 serde_json = "1.0.92"
 
-
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "test-util"]}
-
-[package.metadata.docs.rs]
-all-features = true
 
 [lib]
 name = "mage_os_database_changelog"
 path = "src/lib/mod.rs"
 
 [features]
+default = ["test_util"]
 test_util = []
 
 [[bin]]
