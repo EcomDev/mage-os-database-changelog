@@ -2,14 +2,27 @@
 name = "mage-os-database-changelog"
 version = "0.1.0"
 edition = "2021"
+description = "Mage-OS Database Changelog"
+
+[package.metadata."docs.rs"]
+features = ["test_util"]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
+[package.metadata.playground]
+features = [
+    "test_util",
+]
 
 [dependencies]
-toml = "0.7"
-mysql_async = { version = "0.31", features = ["tracing"] }
+toml = { version = "0.7" }
+mysql_async = { version = "0.31", default-features = false, features = ["default-rustls", "tracing"]}
 mysql_common = "0.29"
-phf = { version = "0.11", features = ["macros"] }
 tracing = { version = "0.1", features = ["max_level_debug", "release_max_level_info"] }
-tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "io-std"] }
 clap = { version = "4", features = ["derive"] }
 tokio-stream = "0.1"
 thiserror = "1"
@@ -20,13 +33,15 @@ serde_json = "1.0.92"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "test-util"]}
+mage-os-database-changelog = { path = ".", features = ["test_util"] }
+thread_local = "1.1.7"
+phf = { version = "0.11", features = ["macros"] }
 
 [lib]
 name = "mage_os_database_changelog"
 path = "src/lib/mod.rs"
 
 [features]
-default = ["test_util"]
 test_util = []
 
 [[bin]]

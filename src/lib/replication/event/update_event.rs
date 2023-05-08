@@ -4,12 +4,14 @@ use crate::schema::TableSchema;
 
 use mysql_common::value::convert::FromValue;
 
-pub struct UpdateEvent {
+#[derive(Clone, PartialEq, Debug)]
+pub struct UpdateRowEvent {
     before: BinaryRow,
     after: BinaryRow,
 }
 
-impl UpdateEvent {
+impl UpdateRowEvent {
+    /// Creates a new update event
     pub fn new(before: BinaryRow, after: BinaryRow) -> Self {
         Self { before, after }
     }
@@ -49,12 +51,12 @@ impl UpdateEvent {
 #[cfg(test)]
 mod tests {
 
-    use crate::replication::UpdateEvent;
+    use crate::replication::UpdateRowEvent;
     use crate::test_util::IntoBinlogValue;
 
     #[test]
     fn takes_value_from_before_column() {
-        let updates = UpdateEvent::new(
+        let updates = UpdateRowEvent::new(
             binlog_row!("sku1", "Name Before"),
             binlog_row!("sku1", "Name After"),
         );
@@ -69,7 +71,7 @@ mod tests {
 
     #[test]
     fn takes_changed_value_from_after_column() {
-        let updates = UpdateEvent::new(
+        let updates = UpdateRowEvent::new(
             binlog_row!("sku1", "Name Before"),
             binlog_row!("sku1", "Name After"),
         );
@@ -84,7 +86,8 @@ mod tests {
 
     #[test]
     fn takes_only_changed_value_from_after_row() {
-        let updates = UpdateEvent::new(binlog_row!(1, "Name Before"), binlog_row!(1, "Name After"));
+        let updates =
+            UpdateRowEvent::new(binlog_row!(1, "Name Before"), binlog_row!(1, "Name After"));
 
         let schema = test_table!("entity", ["entity_id", "name"]);
 

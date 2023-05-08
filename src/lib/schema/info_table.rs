@@ -8,7 +8,7 @@ pub struct InfoSchemaTable<'a> {
 }
 
 impl<'a> InfoSchemaTable<'a> {
-    fn new(info: &'a SchemaInformation, table_name: &'a str) -> Self {
+    pub(crate) fn new(info: &'a SchemaInformation, table_name: &'a str) -> Self {
         Self {
             info,
             table_name: Cow::Borrowed(table_name),

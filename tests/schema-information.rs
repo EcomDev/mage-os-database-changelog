@@ -1,10 +1,10 @@
 mod fixture;
 use fixture::Fixture;
+use mage_os_database_changelog::error::Error;
 use mage_os_database_changelog::schema::SchemaInformation;
-use mysql_async::Error as MySQLError;
 
 #[tokio::test]
-async fn populates_columns_from_information_schema() -> Result<(), MySQLError> {
+async fn populates_columns_from_information_schema() -> Result<(), Error> {
     let fixture = Fixture::create_with_database("test_database").await?;
     let database_name = fixture.database_name().unwrap();
     let mut connection = Fixture::create_connection().await?;
@@ -35,7 +35,7 @@ async fn populates_columns_from_information_schema() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn takes_into_account_table_prefix_for_column_names() -> Result<(), MySQLError> {
+async fn takes_into_account_table_prefix_for_column_names() -> Result<(), Error> {
     let fixture = Fixture::create_with_database("test_database").await?;
     let database_name = fixture.database_name().unwrap();
     let mut connection = Fixture::create_connection().await?;

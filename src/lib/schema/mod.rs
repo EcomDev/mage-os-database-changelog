@@ -1,30 +1,24 @@
+//! Table schema for mapping of binary log rows into actual column names
 mod info;
 mod info_table;
+mod table_name;
 
 pub use info::SchemaInformation;
+pub(crate) use table_name::table_name_without_prefix;
 
 /// Table schema provider
 ///
 /// Provides information required for mapping binary rows values to actual columns
-///
-/// Here is an example how it is used inside of the changelog observers to access column values
-/// ```rust
-/// use mage_os_database_changelog::{binlog_row, test_table, replication::BinaryRow};
-/// use mage_os_database_changelog::test_util::IntoBinlogValue;
-///
-/// let row: BinaryRow = binlog_row!(1, 2, "value1");
-/// let schema = test_table!("entity_int", ["entity_id", "attribute_id", "value"]);
-///
-/// assert_eq!(row.parse::<usize>("entity_id", &schema).unwrap(), 1);
-/// assert_eq!(row.parse::<usize>("attribute_id", &schema).unwrap(), 2);
-/// assert_eq!(row.parse::<String>("value", &schema).unwrap(), "value1");
-/// ```
 pub trait TableSchema {
+    /// Table name in database
     fn table_name(&self) -> &str;
 
+    /// Checks if specified column is a single auto_incremented column in this table
     fn is_generated_primary_key(&self, column: impl AsRef<str>) -> bool;
 
+    /// Checks if specified column is a part of the table
     fn has_column(&self, column: impl AsRef<str>) -> bool;
 
+    /// Returns position of column in the table definition
     fn column_position(&self, column: impl AsRef<str>) -> Option<usize>;
 }

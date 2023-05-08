@@ -1,5 +1,5 @@
 use mysql_async::prelude::*;
-use mysql_async::Error;
+use mysql_async::Pool;
 use mysql_async::{BinlogStream, Conn};
 use mysql_common::binlog::events::TableMapEvent;
 
@@ -9,12 +9,14 @@ use mysql_common::packets::BinlogDumpFlags;
 use mysql_common::row::Row;
 use mysql_common::value::Value;
 use std::borrow::Cow;
+use std::iter::Once;
 
-
-
+use mage_os_database_changelog::database::Database;
+use mage_os_database_changelog::error::Error;
+use mage_os_database_changelog::replication::BinlogPosition;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{OnceLock};
+use std::sync::OnceLock;
 
 pub struct Fixture {
     conn: Conn,
@@ -61,6 +63,8 @@ static DATABASE_SCHEMA: [&'static str; 4] = [
 
 static DATABASE_NUMBER: OnceLock<AtomicUsize> = OnceLock::new();
 
+thread_local!(static POOL: Pool = Pool::from_url(std::env::var("TEST_MYSQL_URL").unwrap()).unwrap());
+
 impl Fixture {
     pub async fn create_with_database(prefix_database: &'static str) -> Result<Self, Error> {
         let mut connection = create_connection().await?;
@@ -71,17 +75,23 @@ impl Fixture {
             .query_drop(format!(
                 "DROP DATABASE IF EXISTS {prefix_database}{database_index}"
             ))
-            .await?;
+            .await
+            .map_err(Error::MySQLError)?;
         connection
             .query_drop(format!("CREATE DATABASE {prefix_database}{database_index}"))
-            .await?;
+            .await
+            .map_err(Error::MySQLError)?;
 
         connection
             .query_drop(format!("USE {prefix_database}{database_index}"))
-            .await?;
+            .await
+            .map_err(Error::MySQLError)?;
 
         for query in DATABASE_SCHEMA {
-            connection.query_drop(query).await?;
+            connection
+                .query_drop(query)
+                .await
+                .map_err(Error::MySQLError)?;
         }
 
         Ok(Self {
@@ -110,6 +120,10 @@ impl Fixture {
         create_connection().await
     }
 
+    pub fn create_database() -> Database {
+        Database::from_pool(pool().clone())
+    }
+
     pub fn database_name(&self) -> Option<Cow<str>> {
         match self.database_name {
             Some((prefix, index)) => Some(Cow::Owned(format!("{prefix}{index}"))),
@@ -119,11 +133,11 @@ impl Fixture {
 
     pub async fn cleanup(mut self) -> Result<(), Error> {
         match self.database_name {
-            Some((prefix, index)) => {
-                self.conn
-                    .query_drop(format!("DROP DATABASE {prefix}{index}"))
-                    .await
-            }
+            Some((prefix, index)) => self
+                .conn
+                .query_drop(format!("DROP DATABASE {prefix}{index}"))
+                .await
+                .map_err(Error::MySQLError),
             None => Ok(()),
         }
     }
@@ -164,10 +178,13 @@ impl Fixture {
                     params
                 });
 
-        self.conn.exec_drop(query, params).await
+        self.conn
+            .exec_drop(query, params)
+            .await
+            .map_err(Error::MySQLError)
     }
 
-    pub async fn binlog_position(&mut self) -> Result<(Vec<u8>, u64), Error> {
+    pub async fn binlog_position(&mut self) -> Result<BinlogPosition, Error> {
         let row: Row = self
             .conn
             .query_first("SHOW MASTER STATUS")
@@ -175,26 +192,34 @@ impl Fixture {
             .unwrap()
             .unwrap();
 
-        let binlog_file: Vec<u8> = row.get(0).unwrap();
-        let binlog_pos: u64 = row.get(1).unwrap();
-        Ok((binlog_file, binlog_pos))
+        Ok(BinlogPosition::new(
+            row.get::<String, _>(0).unwrap(),
+            row.get(1).unwrap(),
+        ))
     }
 
     pub async fn into_binary_log_stream(
         self,
-        (binlog_file, binlog_pos): (Vec<u8>, u64),
+        position: BinlogPosition,
     ) -> Result<BinlogStream, Error> {
         let replication_request = BinlogRequest::new(42)
-            .with_filename(Cow::from(binlog_file))
-            .with_pos(binlog_pos)
+            .with_filename(position.file().as_bytes())
+            .with_pos(position.position())
             .with_flags(BinlogDumpFlags::BINLOG_DUMP_NON_BLOCK);
 
-        self.conn.get_binlog_stream(replication_request).await
+        self.conn
+            .get_binlog_stream(replication_request)
+            .await
+            .map_err(Error::MySQLError)
     }
 }
 
 async fn create_connection() -> Result<Conn, Error> {
-    Conn::from_url(std::env::var("TEST_MYSQL_URL").unwrap()).await
+    pool().get_conn().await.map_err(Error::MySQLError)
+}
+
+fn pool() -> Pool {
+    POOL.with(|pool| pool.clone())
 }
 
 trait BatchRow {

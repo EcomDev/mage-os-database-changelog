@@ -1,4 +1,4 @@
-use super::BUFFER_STACK_SIZE;
+use crate::ROW_BUFFER_SIZE;
 
 use bitvec::prelude::{BitSlice, BitVec};
 use mysql_common::binlog::events::{OptionalMetadataField, TableMapEvent};
@@ -8,11 +8,12 @@ use smallvec::SmallVec;
 
 use std::io::{Error as IoError, ErrorKind, Result as IoResult};
 
+#[doc(hidden)]
 pub struct BinaryTable {
-    column_types: SmallVec<[Option<ColumnType>; BUFFER_STACK_SIZE]>,
+    column_types: SmallVec<[Option<ColumnType>; ROW_BUFFER_SIZE]>,
     column_is_unsigned: BitVec<u8>,
     column_is_json: BitVec<u8>,
-    column_metadata: SmallVec<[Option<Vec<u8>>; BUFFER_STACK_SIZE]>,
+    column_metadata: SmallVec<[Option<Vec<u8>>; ROW_BUFFER_SIZE]>,
 }
 
 impl BinaryTable {

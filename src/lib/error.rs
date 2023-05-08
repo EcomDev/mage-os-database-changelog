@@ -15,4 +15,6 @@ pub enum Error {
     ColumnParseError(Value, &'static str, String),
     #[error("Unsupported value in column {1} for {0} type")]
     ColumnNotSupported(&'static str, String),
+    #[error("Failed to synchronize data between threads")]
+    Synchronization,
 }

@@ -1,4 +1,5 @@
-use crate::replication::{BinaryRow, BUFFER_STACK_SIZE};
+use crate::replication::BinaryRow;
+use crate::ROW_BUFFER_SIZE;
 use mysql_common::binlog::jsondiff::{JsonDiff, JsonDiffOperation};
 use mysql_common::binlog::value::BinlogValue;
 use mysql_common::value::Value;
@@ -31,7 +32,7 @@ pub enum CompareValue {
 #[doc(hidden)]
 #[derive(Debug, PartialEq)]
 pub struct CompareBinaryRow {
-    values: SmallVec<[CompareValue; BUFFER_STACK_SIZE]>,
+    values: SmallVec<[CompareValue; ROW_BUFFER_SIZE]>,
 }
 
 #[doc(hidden)]

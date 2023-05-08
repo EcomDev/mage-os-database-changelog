@@ -1,11 +1,14 @@
 use crate::replication::BinaryRow;
 
+mod meta;
 mod update_event;
 
-pub use update_event::UpdateEvent;
+pub use meta::{BinlogPosition, EventMetadata};
+pub use update_event::UpdateRowEvent;
 
+#[derive(Clone, PartialEq, Debug)]
 pub enum Event {
-    Insert(BinaryRow),
-    Update(UpdateEvent),
-    Delete(BinaryRow),
+    InsertRow(BinaryRow),
+    UpdateRow(UpdateRowEvent),
+    DeleteRow(BinaryRow),
 }

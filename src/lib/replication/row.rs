@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::replication::binary_table::{BinaryTable, MappedBitSet};
-use crate::replication::BUFFER_STACK_SIZE;
 use crate::schema::TableSchema;
+use crate::ROW_BUFFER_SIZE;
 use bitvec::slice::BitSlice;
 use mysql_common::binlog::row::BinlogRowValueOptions;
 use mysql_common::binlog::value::BinlogValue;
@@ -14,9 +14,9 @@ use mysql_common::value::Value;
 use smallvec::SmallVec;
 use std::any::type_name;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BinaryRow {
-    values: SmallVec<[Option<BinlogValue<'static>>; BUFFER_STACK_SIZE]>,
+    values: SmallVec<[Option<BinlogValue<'static>>; ROW_BUFFER_SIZE]>,
 }
 
 impl<'de> MyDeserialize<'de> for BinaryRow {
@@ -97,7 +97,7 @@ impl BinaryRow {
         flag
     }
 
-    pub(crate) fn values(&self) -> &SmallVec<[Option<BinlogValue<'static>>; BUFFER_STACK_SIZE]> {
+    pub(crate) fn values(&self) -> &SmallVec<[Option<BinlogValue<'static>>; ROW_BUFFER_SIZE]> {
         &self.values
     }
 

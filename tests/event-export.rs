@@ -1,37 +1,20 @@
-#![feature(async_fn_in_trait)]
 use mysql_async::binlog::events::{EventData, TableMapEvent};
 use mysql_async::binlog::EventType;
 
 use mysql_async::Error as MySQLError;
 
-
-
-
-
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap};
-
-
-
-
-use mage_os_database_changelog::replication::{ReplicationObserver};
-
+use std::collections::BTreeMap;
 
 use tokio_stream::{self, StreamExt};
 
 mod fixture;
 use fixture::*;
-
-#[derive(Default)]
-struct EventsObserver {
-    rows: Vec<String>,
-    rotates: Vec<String>,
-}
-
-impl ReplicationObserver for EventsObserver {}
+use mage_os_database_changelog::error::Error;
+use mage_os_database_changelog::replication::BinlogPosition;
 
 #[tokio::test]
-async fn writes_to_entity_tables() -> Result<(), MySQLError> {
+async fn writes_to_entity_tables() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     let binlog_position = fixture.binlog_position().await?;
@@ -42,7 +25,7 @@ async fn writes_to_entity_tables() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn updates_to_entity_table() -> Result<(), MySQLError> {
+async fn updates_to_entity_table() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     write_entity_data(&mut fixture).await?;
@@ -62,7 +45,7 @@ async fn updates_to_entity_table() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn delete_int_values() -> Result<(), MySQLError> {
+async fn delete_int_values() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     write_entity_data(&mut fixture).await?;
@@ -79,7 +62,7 @@ async fn delete_int_values() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn update_single_json_field() -> Result<(), MySQLError> {
+async fn update_single_json_field() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     write_entity_data(&mut fixture).await?;
@@ -96,7 +79,7 @@ async fn update_single_json_field() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn update_complex_json_table() -> Result<(), MySQLError> {
+async fn update_complex_json_table() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     write_entity_data(&mut fixture).await?;
@@ -132,7 +115,7 @@ async fn update_complex_json_table() -> Result<(), MySQLError> {
 }
 
 #[tokio::test]
-async fn nullable_entity_write_write() -> Result<(), MySQLError> {
+async fn nullable_entity_write_write() -> Result<(), Error> {
     let mut fixture = Fixture::create_with_database("test_db").await?;
 
     let binlog_position = fixture.binlog_position().await?;
@@ -152,8 +135,8 @@ async fn nullable_entity_write_write() -> Result<(), MySQLError> {
 
 async fn print_binlog_events(
     fixture: Fixture,
-    binlog_position: (Vec<u8>, u64),
-) -> Result<(), MySQLError> {
+    binlog_position: BinlogPosition,
+) -> Result<(), Error> {
     let mut binlog_stream = fixture
         .copy()
         .await?
@@ -256,7 +239,7 @@ async fn print_binlog_events(
     Ok(())
 }
 
-async fn write_entity_data(fixture: &mut Fixture) -> Result<(), MySQLError> {
+async fn write_entity_data(fixture: &mut Fixture) -> Result<(), Error> {
     fixture
         .insert_into(
             "entity",

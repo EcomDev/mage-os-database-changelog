@@ -21,8 +21,8 @@ macro_rules! binlog_json {
 
 #[macro_export]
 macro_rules! binlog_row {
-    ($($value:expr),+) => {
-        ($crate::replication::BinaryRow::new(&[$($value.into_binlog_value()),+]))
+    ($($value:expr),*) => {
+        ($crate::replication::BinaryRow::new(&[$($crate::test_util::IntoBinlogValue::into_binlog_value($value)),*]))
     };
 }
 
@@ -83,5 +83,42 @@ macro_rules! test_table {
         $crate::test_util::TestTableSchema::new($name,
             &[$($column),*]
         )
+    };
+    [$($column:expr),*] => {
+        $crate::test_util::TestTableSchema::new(
+            "table_name",
+            &[$($column),*]
+        )
+    }
+}
+
+macro_rules! mapper_test {
+    ($mapper:expr, $expected:expr, insert[$($value:expr),+], [$($column:expr),+]) => {
+        let table = test_table![$($column),+];
+        let event = $crate::replication::Event::InsertRow(binlog_row!($($value),+));
+        mapper_test!($mapper, $expected, event, table);
+    };
+    ($mapper:expr, $expected:expr, update[($($before:expr),+), ($($after:expr),+)], [$($column:expr),+]) => {
+        let table = test_table![$($column),+];
+        let event = $crate::replication::Event::UpdateRow($crate::replication::UpdateRowEvent::new(
+            binlog_row!($($before),+),
+            binlog_row!($($after),+),
+        ));
+        mapper_test!($mapper, $expected, event, table);
+    };
+    ($mapper:expr, $expected:expr, delete[$($value:expr),+], [$($column:expr),+]) => {
+        let table = test_table![$($column),+];
+        let event = $crate::replication::Event::DeleteRow(binlog_row!($($value),+));
+        mapper_test!($mapper, $expected, event, table);
+    };
+    ($mapper:expr, $expected:expr, $event:expr, $table:expr) => {
+        assert_eq!(
+            $crate::mapper::ChangeLogMapper::map_event(
+                    &$mapper,
+                    &$event,
+                    &$table
+                ).unwrap(),
+            $expected
+        );
     };
 }

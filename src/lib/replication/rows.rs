@@ -1,14 +1,9 @@
 use bitvec::prelude::*;
-use mysql_common::binlog::events::{RowsEventData};
-
+use mysql_common::binlog::events::RowsEventData;
 
 use mysql_common::io::ParseBuf;
 
-
-
-
-
-use crate::replication::binary_table::{BinaryTable};
+use crate::replication::binary_table::BinaryTable;
 use crate::replication::row::BinaryRow;
 
 pub struct BinaryRowIter<'a> {
@@ -18,7 +13,11 @@ pub struct BinaryRowIter<'a> {
 }
 
 impl<'a> BinaryRowIter<'a> {
-    fn new(rows_event: &'a RowsEventData<'a>, table: &'a BinaryTable, data: ParseBuf<'a>) -> Self {
+    pub(crate) fn new(
+        rows_event: &'a RowsEventData<'a>,
+        table: &'a BinaryTable,
+        data: ParseBuf<'a>,
+    ) -> Self {
         BinaryRowIter {
             rows_event,
             table,
@@ -81,10 +80,9 @@ mod tests {
     use crate::replication::binary_table::BinaryTable;
     use crate::replication::test_fixture::Fixture;
     use crate::test_util::*;
-    
-    
+
     use mysql_common::binlog::jsondiff::JsonDiffOperation;
-    
+
     use mysql_common::io::ParseBuf;
     use serde_json::json;
 

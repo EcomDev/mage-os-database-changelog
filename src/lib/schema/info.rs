@@ -1,3 +1,5 @@
+use crate::schema::info_table::InfoSchemaTable;
+use crate::schema::{table_name, table_name_without_prefix};
 use mysql_async::prelude::Queryable;
 use mysql_async::{Conn, Error};
 use mysql_common::params::Params;
@@ -30,12 +32,10 @@ impl<'a> SchemaInformation<'a> {
         self.populate_columns(
             table_info
                 .map(|mut row| {
-                    let mut table_name: Cow<str> = Cow::Owned(row.take(0).unwrap());
-                    if table_name.starts_with(table_prefix.as_ref()) {
-                        table_name.to_mut().drain(0..table_prefix.as_ref().len());
-                    }
+                    let table_name =
+                        table_name_without_prefix(row.take::<String, _>(0).unwrap(), &table_prefix);
                     (
-                        table_name,
+                        Cow::Owned(table_name),
                         Cow::Owned(row.take(1).unwrap()),
                         row.take(2).unwrap(),
                         row.take(3).unwrap(),
@@ -100,6 +100,10 @@ impl<'a> SchemaInformation<'a> {
             None => false,
             Some(primary_key) => primary_key.eq(column.as_ref()),
         }
+    }
+
+    pub fn table_schema(&'a self, table_name: &'a str) -> InfoSchemaTable<'a> {
+        InfoSchemaTable::new(self, table_name)
     }
 }
 
