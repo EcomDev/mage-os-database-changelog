@@ -15,4 +15,6 @@ pub enum ProductChange {
     Category(usize, usize),
     CompositeRelation(usize),
     TierPrice(usize),
+    Url(usize, usize),
+    CategoryUrl(usize, usize),
 }

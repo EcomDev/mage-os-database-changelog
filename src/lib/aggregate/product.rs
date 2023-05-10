@@ -44,89 +44,70 @@ impl Into<ChangeAggregateDataKey> for AggregateKey {
 #[derive(Default)]
 pub struct ProductAggregate {
     data: HashMap<AggregateKey, HashSet<usize>>,
+    size: usize,
     last_metadata: Option<EventMetadata>,
+}
+
+impl ProductAggregate {
+    fn aggregate_product(&mut self, key: AggregateKey, entity_id: usize) {
+        let is_inserted = self.data.entry(key).or_default().insert(entity_id);
+
+        if is_inserted {
+            self.size += 1;
+        }
+    }
+
+    fn process_product_change(&mut self, change: ProductChange) {
+        match change {
+            ProductChange::Attribute(entity_id, attribute_id) => {
+                self.aggregate_product(AggregateKey::Attribute(attribute_id), entity_id);
+            }
+            ProductChange::Field(entity_id, field) => {
+                self.aggregate_product(AggregateKey::Field(field), entity_id);
+            }
+            ProductChange::Fields(entity_id, fields) => {
+                for field in fields {
+                    self.aggregate_product(AggregateKey::Field(field), entity_id);
+                }
+            }
+            ProductChange::Created(entity_id) => {
+                self.aggregate_product(AggregateKey::Created, entity_id);
+            }
+            ProductChange::Deleted(entity_id) => {
+                self.aggregate_product(AggregateKey::Deleted, entity_id);
+            }
+
+            ProductChange::Website(entity_id, website_id) => {
+                self.aggregate_product(AggregateKey::WebsiteAll, entity_id);
+                self.aggregate_product(AggregateKey::WebsiteSpecific(website_id), entity_id);
+            }
+            ProductChange::Category(entity_id, category_id) => {
+                self.aggregate_product(AggregateKey::CategoryAll, entity_id);
+                self.aggregate_product(AggregateKey::CategorySpecific(category_id), entity_id);
+            }
+            ProductChange::LinkRelation(entity_id, type_id) => {
+                self.aggregate_product(AggregateKey::Link(type_id), entity_id);
+            }
+            ProductChange::MediaGallery(entity_id) => {
+                self.aggregate_product(AggregateKey::MediaGallery, entity_id);
+            }
+            ProductChange::CompositeRelation(entity_id) => {
+                self.aggregate_product(AggregateKey::Composite, entity_id);
+            }
+            ProductChange::TierPrice(entity_id) => {
+                self.aggregate_product(AggregateKey::TierPrice, entity_id);
+            }
+            _ => {}
+        }
+    }
 }
 
 impl Aggregate for ProductAggregate {
     fn push(&mut self, item: impl Into<ItemChange>) {
         match item.into() {
             ItemChange::Metadata(metadata) => self.last_metadata = Some(metadata),
-            ItemChange::ProductChange(ProductChange::Attribute(entity_id, attribute_id)) => {
-                self.data
-                    .entry(AggregateKey::Attribute(attribute_id))
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::Field(entity_id, field)) => {
-                self.data
-                    .entry(AggregateKey::Field(field))
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::Fields(entity_id, fields)) => {
-                for field in fields {
-                    self.data
-                        .entry(AggregateKey::Field(field))
-                        .or_default()
-                        .insert(entity_id);
-                }
-            }
-            ItemChange::ProductChange(ProductChange::Created(entity_id)) => {
-                self.data
-                    .entry(AggregateKey::Created)
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::Deleted(entity_id)) => {
-                self.data
-                    .entry(AggregateKey::Deleted)
-                    .or_default()
-                    .insert(entity_id);
-            }
-
-            ItemChange::ProductChange(ProductChange::Website(entity_id, website_id)) => {
-                self.data
-                    .entry(AggregateKey::WebsiteAll)
-                    .or_default()
-                    .insert(entity_id);
-                self.data
-                    .entry(AggregateKey::WebsiteSpecific(website_id))
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::Category(entity_id, category_id)) => {
-                self.data
-                    .entry(AggregateKey::CategoryAll)
-                    .or_default()
-                    .insert(entity_id);
-                self.data
-                    .entry(AggregateKey::CategorySpecific(category_id))
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::LinkRelation(entity_id, type_id)) => {
-                self.data
-                    .entry(AggregateKey::Link(type_id))
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::MediaGallery(entity_id)) => {
-                self.data
-                    .entry(AggregateKey::MediaGallery)
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::CompositeRelation(entity_id)) => {
-                self.data
-                    .entry(AggregateKey::Composite)
-                    .or_default()
-                    .insert(entity_id);
-            }
-            ItemChange::ProductChange(ProductChange::TierPrice(entity_id)) => {
-                self.data
-                    .entry(AggregateKey::TierPrice)
-                    .or_default()
-                    .insert(entity_id);
+            ItemChange::ProductChange(product_change) => {
+                self.process_product_change(product_change)
             }
         }
     }

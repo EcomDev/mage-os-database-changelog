@@ -12,7 +12,7 @@ use tokio::io::{stdout, AsyncWriteExt};
 use tokio::sync::mpsc::channel;
 use tokio::task::JoinHandle;
 
-const HARDCODED_MAX_LENGTH: usize = 10000;
+const HARDCODED_MAX_LENGTH: usize = 5000;
 
 /// Mage-OS Database Changelog reader
 #[derive(Parser, Debug)]
@@ -84,7 +84,7 @@ async fn write_to_stdout(change: &mut impl Aggregate) -> Result<(), Error> {
                 }
                 ChangeAggregateDataKey::KeyAndScopeInt(key, scope) => {
                     object
-                        .entry("field_scopded")
+                        .entry("field_scoped")
                         .or_insert(json!({}))
                         .as_object_mut()
                         .unwrap()
@@ -127,7 +127,7 @@ async fn create_writer() -> (
     impl ChangeLogSender<Item = ItemChange>,
     JoinHandle<Result<(), Error>>,
 ) {
-    let (sender, mut receiver) = channel(200);
+    let (sender, mut receiver) = channel(10000);
 
     let handle = tokio::spawn(async move {
         let mut aggregate = ProductAggregate::default();

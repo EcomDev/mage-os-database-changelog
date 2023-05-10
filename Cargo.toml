@@ -41,6 +41,14 @@ phf = { version = "0.11", features = ["macros"] }
 name = "mage_os_database_changelog"
 path = "src/lib/mod.rs"
 
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
+
 [features]
 test_util = []
 
