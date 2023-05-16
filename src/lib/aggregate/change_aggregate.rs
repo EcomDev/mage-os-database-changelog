@@ -1,19 +1,20 @@
 use crate::replication::{BinlogPosition, EventMetadata};
+use crate::MODIFIED_FIELDS_BUFFER_SIZE;
 use mysql_common::frunk::labelled::chars::u;
 use serde_json::Value;
 use smallvec::SmallVec;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-#[derive(Debug, Eq, PartialEq, Hash)]
-pub enum ChangeAggregateDataKey {
+#[derive(Debug, PartialEq)]
+pub enum ChangeAggregateKey {
     Attribute(usize),
     Key(&'static str),
     KeyAndScopeInt(&'static str, usize),
     KeyAndScopeStr(&'static str, &'static str),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum ChangeAggregateValue {
     Id(Vec<usize>),
     String(Vec<Arc<str>>),
@@ -66,23 +67,39 @@ impl<const S: usize> From<[usize; S]> for ChangeAggregateValue {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum ChangeAggregateEntity {
+    Product,
+    Category,
+    Inventory,
+}
+
+#[derive(Debug)]
 pub struct ChangeAggregate {
-    pub entity: &'static str,
+    pub entity: ChangeAggregateEntity,
     pub metadata: EventMetadata,
-    pub data: HashMap<ChangeAggregateDataKey, ChangeAggregateValue>,
+    pub data: SmallVec<[(ChangeAggregateKey, ChangeAggregateValue); MODIFIED_FIELDS_BUFFER_SIZE]>,
+}
+
+impl PartialEq for ChangeAggregate {
+    fn eq(&self, other: &Self) -> bool {
+        self.entity == other.entity
+            && self.metadata == other.metadata
+            && self.data.len() == other.data.len()
+            && self.data.iter().all(|v| other.data.contains(v))
+    }
 }
 
 impl ChangeAggregate {
-    pub fn new(entity: &'static str, metadata: EventMetadata) -> Self {
+    pub fn new(entity: ChangeAggregateEntity, metadata: EventMetadata) -> Self {
         Self {
             entity,
             metadata,
-            data: HashMap::new(),
+            data: SmallVec::new(),
         }
     }
 
-    pub fn with_data<T>(mut self, key: ChangeAggregateDataKey, value: T) -> Self
+    pub fn with_data<T>(mut self, key: ChangeAggregateKey, value: T) -> Self
     where
         T: Into<ChangeAggregateValue>,
     {
@@ -90,10 +107,10 @@ impl ChangeAggregate {
         self
     }
 
-    pub fn add_data<T>(&mut self, key: ChangeAggregateDataKey, value: T)
+    pub fn add_data<T>(&mut self, key: ChangeAggregateKey, value: T)
     where
         T: Into<ChangeAggregateValue>,
     {
-        self.data.insert(key, value.into());
+        self.data.push((key, value.into()));
     }
 }

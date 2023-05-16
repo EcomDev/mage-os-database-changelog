@@ -122,3 +122,14 @@ macro_rules! mapper_test {
         );
     };
 }
+
+macro_rules! output_test {
+    ($formatter:expr, $aggregate:expr, $expected:expr) => {
+        let mut buffer = Cursor::new(Vec::new());
+        $crate::output::Output::write(&$formatter, &mut buffer, $aggregate)
+            .await
+            .unwrap();
+
+        assert_eq!($expected, buffer.into_inner().into())
+    };
+}

@@ -1,14 +1,14 @@
 use bitvec::macros::internal::funty::Fundamental;
 use clap::{arg, Parser};
-use mage_os_database_changelog::aggregate::{Aggregate, ChangeAggregateDataKey, ProductAggregate};
+use mage_os_database_changelog::aggregate::{Aggregate, ChangeAggregateKey, ProductAggregate};
 use mage_os_database_changelog::database::Database;
 use mage_os_database_changelog::error::Error;
 use mage_os_database_changelog::log::{ChangeLogSender, ItemChange};
 use mage_os_database_changelog::mapper::{MagentoTwoMapper, MapperObserver};
+use mage_os_database_changelog::output::{JsonOutput, Output};
 use mage_os_database_changelog::replication::{BinlogPosition, ReplicationClient};
 use mysql_async::Pool;
-use serde_json::{json, to_string};
-use tokio::io::{stdout, AsyncWriteExt};
+use tokio::io::stdout;
 use tokio::sync::mpsc::channel;
 use tokio::task::JoinHandle;
 
@@ -51,74 +51,7 @@ async fn write_to_stdout(change: &mut impl Aggregate) -> Result<(), Error> {
 
     let mut output = stdout();
 
-    let mut json = serde_json::Value::Object(Default::default());
-    {
-        let object = json.as_object_mut().unwrap();
-        object.insert("entity".into(), change.entity.into());
-        object.insert(
-            "metadata".into(),
-            json!({
-                "timestamp": change.metadata.timestamp(),
-                "file": change.metadata.binlog_position().file(),
-                "position": change.metadata.binlog_position().position(),
-            }),
-        );
-
-        for (key, value) in change.data {
-            match key {
-                ChangeAggregateDataKey::Key(global_key) => {
-                    object
-                        .entry("field_global")
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .insert(global_key.into(), value.into());
-                }
-                ChangeAggregateDataKey::Attribute(attribute_key) => {
-                    object
-                        .entry("attributes")
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .insert(attribute_key.to_string(), value.into());
-                }
-                ChangeAggregateDataKey::KeyAndScopeInt(key, scope) => {
-                    object
-                        .entry("field_scoped")
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .entry(scope.to_string())
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .insert(key.into(), value.into());
-                }
-                ChangeAggregateDataKey::KeyAndScopeStr(key, scope) => {
-                    object
-                        .entry("field_scopded")
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .entry(scope.to_string())
-                        .or_insert(json!({}))
-                        .as_object_mut()
-                        .unwrap()
-                        .insert(key.into(), value.into());
-                }
-            }
-        }
-    }
-
-    output
-        .write_all(
-            to_string(&json)
-                .map_err(|_| Error::Synchronization)?
-                .as_bytes(),
-        )
-        .await?;
-
-    output.write_u8('\n'.as_u8()).await?;
+    JsonOutput.write(&mut output, change).await?;
 
     Ok(())
 }

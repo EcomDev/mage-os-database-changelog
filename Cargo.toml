@@ -30,6 +30,7 @@ smallvec = "1.10.0"
 bitvec = "1.0.1"
 serde = "1.0.152"
 serde_json = "1.0.92"
+rmp = "0.8.11"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "test-util"]}

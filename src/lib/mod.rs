@@ -10,6 +10,7 @@ pub mod database;
 pub mod error;
 pub mod log;
 pub mod mapper;
+pub mod output;
 pub mod schema;
 
 /// Number of entries in array of `SmallVec` that are used for row representation in tables.

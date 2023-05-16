@@ -1,5 +1,5 @@
-use crate::aggregate::change_aggregate::{ChangeAggregate, ChangeAggregateDataKey};
-use crate::aggregate::Aggregate;
+use crate::aggregate::change_aggregate::{ChangeAggregate, ChangeAggregateKey};
+use crate::aggregate::{Aggregate, ChangeAggregateEntity};
 use crate::log::{ItemChange, ProductChange};
 use crate::replication::EventMetadata;
 use mysql_common::frunk::labelled::chars::{e, s};
@@ -22,21 +22,21 @@ enum AggregateKey {
     TierPrice,
 }
 
-impl Into<ChangeAggregateDataKey> for AggregateKey {
-    fn into(self) -> ChangeAggregateDataKey {
+impl Into<ChangeAggregateKey> for AggregateKey {
+    fn into(self) -> ChangeAggregateKey {
         match self {
-            Self::Attribute(id) => ChangeAggregateDataKey::Attribute(id),
-            Self::Created => ChangeAggregateDataKey::Key("@created"),
-            Self::Deleted => ChangeAggregateDataKey::Key("@deleted"),
-            Self::Field(field) => ChangeAggregateDataKey::Key(field),
-            Self::WebsiteAll => ChangeAggregateDataKey::Key("@website"),
-            Self::WebsiteSpecific(id) => ChangeAggregateDataKey::KeyAndScopeInt("@website", id),
-            Self::CategoryAll => ChangeAggregateDataKey::Key("@category"),
-            Self::CategorySpecific(id) => ChangeAggregateDataKey::KeyAndScopeInt("@category", id),
-            Self::Link(id) => ChangeAggregateDataKey::KeyAndScopeInt("@link", id),
-            Self::Composite => ChangeAggregateDataKey::Key("@composite"),
-            Self::MediaGallery => ChangeAggregateDataKey::Key("@media_gallery"),
-            Self::TierPrice => ChangeAggregateDataKey::Key("@tier_price"),
+            Self::Attribute(id) => ChangeAggregateKey::Attribute(id),
+            Self::Created => ChangeAggregateKey::Key("@created"),
+            Self::Deleted => ChangeAggregateKey::Key("@deleted"),
+            Self::Field(field) => ChangeAggregateKey::Key(field),
+            Self::WebsiteAll => ChangeAggregateKey::Key("@website"),
+            Self::WebsiteSpecific(id) => ChangeAggregateKey::KeyAndScopeInt("@website", id),
+            Self::CategoryAll => ChangeAggregateKey::Key("@category"),
+            Self::CategorySpecific(id) => ChangeAggregateKey::KeyAndScopeInt("@category", id),
+            Self::Link(id) => ChangeAggregateKey::KeyAndScopeInt("@link", id),
+            Self::Composite => ChangeAggregateKey::Key("@composite"),
+            Self::MediaGallery => ChangeAggregateKey::Key("@media_gallery"),
+            Self::TierPrice => ChangeAggregateKey::Key("@tier_price"),
         }
     }
 }
@@ -61,9 +61,6 @@ impl ProductAggregate {
         match change {
             ProductChange::Attribute(entity_id, attribute_id) => {
                 self.aggregate_product(AggregateKey::Attribute(attribute_id), entity_id);
-            }
-            ProductChange::Field(entity_id, field) => {
-                self.aggregate_product(AggregateKey::Field(field), entity_id);
             }
             ProductChange::Fields(entity_id, fields) => {
                 for field in fields {
@@ -124,7 +121,7 @@ impl Aggregate for ProductAggregate {
             Some(metadata) => metadata,
         };
 
-        let mut change_aggregate = ChangeAggregate::new("product", metadata);
+        let mut change_aggregate = ChangeAggregate::new(ChangeAggregateEntity::Product, metadata);
         let data = std::mem::take(&mut self.data);
 
         for (key, value) in data.into_iter() {
@@ -138,7 +135,8 @@ impl Aggregate for ProductAggregate {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::aggregate::change_aggregate::ChangeAggregateDataKey;
+    use crate::aggregate::change_aggregate::ChangeAggregateKey;
+    use crate::aggregate::ChangeAggregateEntity;
     use crate::log::ProductChange;
     use crate::replication::BinlogPosition;
     use std::mem::size_of_val;
@@ -171,11 +169,11 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Attribute(1), [2, 3])
-                .with_data(ChangeAggregateDataKey::Attribute(2), [1])
+                .with_data(ChangeAggregateKey::Attribute(1), [2, 3])
+                .with_data(ChangeAggregateKey::Attribute(2), [1])
             )
         )
     }
@@ -184,25 +182,25 @@ mod tests {
     fn aggregates_key_changes() {
         let mut aggregate = ProductAggregate::default();
 
-        aggregate.push(ProductChange::Field(2, "sku"));
+        aggregate.push(ProductChange::Fields(2, vec!["sku"].into()));
         aggregate.push(ProductChange::Fields(
             2,
             vec!["type_id", "attribute_set_id"].into(),
         ));
-        aggregate.push(ProductChange::Field(3, "type_id"));
-        aggregate.push(ProductChange::Field(1, "sku"));
+        aggregate.push(ProductChange::Fields(3, vec!["type_id"].into()));
+        aggregate.push(ProductChange::Fields(1, vec!["sku"].into()));
         aggregate.push(EventMetadata::new(1, BinlogPosition::new("file", 1)));
 
         assert_eq!(
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("sku"), [1, 2])
-                .with_data(ChangeAggregateDataKey::Key("attribute_set_id"), [2])
-                .with_data(ChangeAggregateDataKey::Key("type_id"), [2, 3])
+                .with_data(ChangeAggregateKey::Key("sku"), [1, 2])
+                .with_data(ChangeAggregateKey::Key("attribute_set_id"), [2])
+                .with_data(ChangeAggregateKey::Key("type_id"), [2, 3])
             )
         )
     }
@@ -221,11 +219,11 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("@created"), [1, 2])
-                .with_data(ChangeAggregateDataKey::Key("@deleted"), [2, 3])
+                .with_data(ChangeAggregateKey::Key("@created"), [1, 2])
+                .with_data(ChangeAggregateKey::Key("@deleted"), [2, 3])
             )
         )
     }
@@ -245,15 +243,12 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("@website"), [1, 2, 3])
-                .with_data(
-                    ChangeAggregateDataKey::KeyAndScopeInt("@website", 1),
-                    [1, 2, 3]
-                )
-                .with_data(ChangeAggregateDataKey::KeyAndScopeInt("@website", 2), [1])
+                .with_data(ChangeAggregateKey::Key("@website"), [1, 2, 3])
+                .with_data(ChangeAggregateKey::KeyAndScopeInt("@website", 1), [1, 2, 3])
+                .with_data(ChangeAggregateKey::KeyAndScopeInt("@website", 2), [1])
             )
         )
     }
@@ -273,15 +268,15 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("@category"), [1, 2, 3])
+                .with_data(ChangeAggregateKey::Key("@category"), [1, 2, 3])
                 .with_data(
-                    ChangeAggregateDataKey::KeyAndScopeInt("@category", 1),
+                    ChangeAggregateKey::KeyAndScopeInt("@category", 1),
                     [1, 2, 3]
                 )
-                .with_data(ChangeAggregateDataKey::KeyAndScopeInt("@category", 2), [1])
+                .with_data(ChangeAggregateKey::KeyAndScopeInt("@category", 2), [1])
             )
         )
     }
@@ -301,14 +296,11 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(
-                    ChangeAggregateDataKey::KeyAndScopeInt("@link", 1),
-                    [1, 2, 3]
-                )
-                .with_data(ChangeAggregateDataKey::KeyAndScopeInt("@link", 2), [1])
+                .with_data(ChangeAggregateKey::KeyAndScopeInt("@link", 1), [1, 2, 3])
+                .with_data(ChangeAggregateKey::KeyAndScopeInt("@link", 2), [1])
             )
         )
     }
@@ -327,11 +319,11 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("@composite"), [1, 2])
-                .with_data(ChangeAggregateDataKey::Key("@media_gallery"), [2, 3])
+                .with_data(ChangeAggregateKey::Key("@composite"), [1, 2])
+                .with_data(ChangeAggregateKey::Key("@media_gallery"), [2, 3])
             )
         )
     }
@@ -348,10 +340,10 @@ mod tests {
             aggregate.flush(),
             Some(
                 ChangeAggregate::new(
-                    "product",
+                    ChangeAggregateEntity::Product,
                     EventMetadata::new(1, BinlogPosition::new("file", 1))
                 )
-                .with_data(ChangeAggregateDataKey::Key("@tier_price"), [1, 2])
+                .with_data(ChangeAggregateKey::Key("@tier_price"), [1, 2])
             )
         )
     }
