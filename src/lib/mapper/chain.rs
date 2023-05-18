@@ -3,7 +3,7 @@ use crate::log::ItemChange;
 use crate::mapper::ChangeLogMapper;
 use crate::replication::Event;
 use crate::schema::TableSchema;
-use std::marker::PhantomData;
+
 
 pub struct ChainMapper<L, R>(L, R);
 

@@ -4,7 +4,7 @@ use crate::log::{ItemChange, ProductChange};
 use crate::replication::EventMetadata;
 
 use std::collections::{HashMap, HashSet};
-use std::time::Duration;
+
 
 #[derive(Eq, PartialEq, Hash)]
 enum AggregateKey {

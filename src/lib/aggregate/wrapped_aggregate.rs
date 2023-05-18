@@ -2,7 +2,7 @@ use crate::aggregate::{Aggregate, AsyncAggregate};
 use crate::error::Error;
 use crate::log::ItemChange;
 use crate::output::Output;
-use mysql_common::frunk::labelled::chars::{w, A};
+
 use std::time::Duration;
 use tokio::io::AsyncWrite;
 use tokio::time::Instant;

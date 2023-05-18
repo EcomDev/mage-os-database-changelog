@@ -3,7 +3,6 @@ mod field_update;
 mod product_change;
 mod sender;
 
-pub use crate::mapper::ChangeLogMapper;
 pub use change_log::ItemChange;
 pub use product_change::ProductChange;
 pub use sender::ChangeLogSender;

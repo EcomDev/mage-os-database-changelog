@@ -1,12 +1,10 @@
-use crate::aggregate::{Aggregate, AsyncAggregate, ProductAggregate, WrappedAggregate};
+use crate::aggregate::{AsyncAggregate, ProductAggregate, WrappedAggregate};
 use crate::app::{ApplicationConfig, ApplicationOutput};
 use crate::database::Database;
 use crate::error::Error;
 use crate::log::{ChangeLogSender, ItemChange};
 use crate::mapper::{ChainMapper, ChangeLogMapper, MagentoTwoMapper, MapperObserver};
-use crate::output::Output;
 use crate::replication::{BinlogPosition, ReplicationClient};
-use std::time::Duration;
 
 use mysql_common::packets::BinlogDumpFlags;
 use serde_json::json;

@@ -10,10 +10,6 @@ use crate::schema::TableSchema;
 use chain_observer::ChainObserver;
 use filter_observer::{FilterObserver, FilterObserverPredicate};
 
-pub trait ChangeLogEventObserver: Sized {
-    async fn process_event(&self, event: &Event, table: &impl TableSchema) -> Result<(), Error>;
-}
-
 pub trait EventObserver: Sized {
     async fn process_event(&self, event: &Event, table: &impl TableSchema) -> Result<(), Error>;
 
@@ -39,16 +35,3 @@ pub trait EventObserverExt: Sized {
 }
 
 impl<T> EventObserverExt for T where T: EventObserver {}
-
-impl<T> EventObserver for T
-where
-    T: ChangeLogEventObserver,
-{
-    async fn process_event(&self, event: &Event, table: &impl TableSchema) -> Result<(), Error> {
-        ChangeLogEventObserver::process_event(self, event, table).await
-    }
-
-    async fn process_metadata(&self, _metadata: &EventMetadata) -> Result<(), Error> {
-        Ok(())
-    }
-}

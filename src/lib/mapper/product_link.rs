@@ -1,5 +1,6 @@
 use crate::error::Error;
-use crate::log::{ChangeLogMapper, ProductChange};
+use crate::log::ProductChange;
+use crate::mapper::ChangeLogMapper;
 use crate::replication::Event;
 use crate::schema::TableSchema;
 

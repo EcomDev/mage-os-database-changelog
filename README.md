@@ -69,6 +69,19 @@ Works best for processing by another application as serialization and deserializ
     ```
     You do not need any changes, although it is a good practice to create custom replication user.
 
+## Dev Build
+
+To build own binary you should have [Rust toolchain](https://www.rust-lang.org/learn/get-started). 
+At the moment project relies on unstable feature in nightly rust that is going to be stabilized this July, so in the mean time you have to use nightly build of rust.
+
+To get a working binary just run the following:
+```bash
+cargo build --release
+cp target/release/database-changelog ./to/your/path/
+```
+
+``````
+
 
 ## Compatibility
 - MySQL 5.7+, 8.0+ (or MariaDB equivalent)

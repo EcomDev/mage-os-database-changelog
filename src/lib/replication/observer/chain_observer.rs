@@ -39,16 +39,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::replication::{
-        BinlogPosition, ChangeLogEventObserver, EventMetadata, EventObserverExt,
-    };
-    use crate::test_util::{ObserverSpy};
+    use crate::replication::{BinlogPosition, EventMetadata, EventObserverExt};
+    use crate::test_util::ObserverSpy;
     use std::io::ErrorKind;
-    
 
     struct FailureObserver;
 
-    impl ChangeLogEventObserver for FailureObserver {
+    impl EventObserver for FailureObserver {
         async fn process_event(
             &self,
             _event: &Event,
@@ -58,6 +55,10 @@ mod tests {
                 ErrorKind::Interrupted,
                 "failure of observer",
             )))
+        }
+
+        async fn process_metadata(&self, metadata: &EventMetadata) -> Result<(), Error> {
+            unreachable!()
         }
     }
 
