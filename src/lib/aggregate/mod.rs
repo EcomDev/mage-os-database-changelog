@@ -1,7 +1,7 @@
 mod change_aggregate;
 mod product;
 
-use crate::error::Error;
+
 use crate::log::ItemChange;
 pub use change_aggregate::*;
 pub use product::*;

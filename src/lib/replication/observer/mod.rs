@@ -4,7 +4,7 @@ mod chain_observer;
 mod filter_observer;
 
 use crate::error::Error;
-use crate::log::ChangeLogSender;
+
 use crate::replication::{Event, EventMetadata};
 use crate::schema::TableSchema;
 use chain_observer::ChainObserver;
@@ -48,7 +48,7 @@ where
         ChangeLogEventObserver::process_event(self, event, table).await
     }
 
-    async fn process_metadata(&self, metadata: &EventMetadata) -> Result<(), Error> {
+    async fn process_metadata(&self, _metadata: &EventMetadata) -> Result<(), Error> {
         Ok(())
     }
 }

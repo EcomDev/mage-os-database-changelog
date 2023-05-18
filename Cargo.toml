@@ -23,12 +23,12 @@ mysql_async = { version = "0.31", default-features = false, features = ["default
 mysql_common = "0.29"
 tracing = { version = "0.1", features = ["max_level_debug", "release_max_level_info"] }
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "io-std"] }
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["derive", "cargo"] }
 tokio-stream = "0.1"
 thiserror = "1"
 smallvec = "1.10.0"
 bitvec = "1.0.1"
-serde = "1.0.152"
+serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.92"
 rmp = "0.8.11"
 
@@ -37,6 +37,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macro
 mage-os-database-changelog = { path = ".", features = ["test_util"] }
 thread_local = "1.1.7"
 phf = { version = "0.11", features = ["macros"] }
+serde_test = "1.0.160"
 
 [lib]
 name = "mage_os_database_changelog"

@@ -1,10 +1,7 @@
-use crate::aggregate::{
-    ChangeAggregate, ChangeAggregateEntity, ChangeAggregateKey, ChangeAggregateValue,
-};
+use crate::aggregate::{ChangeAggregate, ChangeAggregateEntity, ChangeAggregateKey};
 use crate::error::Error;
 use crate::output::Output;
-use clap::builder::Str;
-use mysql_common::frunk::Generic;
+
 use serde_json::{json, to_vec, Value};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 

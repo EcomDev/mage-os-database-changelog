@@ -1,6 +1,6 @@
 use crate::log::ProductChange;
 use crate::replication::EventMetadata;
-use mysql_common::frunk::labelled::chars::S;
+
 
 pub enum ItemChange {
     ProductChange(ProductChange),

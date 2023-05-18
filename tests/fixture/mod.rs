@@ -9,7 +9,6 @@ use mysql_common::packets::BinlogDumpFlags;
 use mysql_common::row::Row;
 use mysql_common::value::Value;
 use std::borrow::Cow;
-use std::iter::Once;
 
 use mage_os_database_changelog::database::Database;
 use mage_os_database_changelog::error::Error;
@@ -66,7 +65,7 @@ static DATABASE_NUMBER: OnceLock<AtomicUsize> = OnceLock::new();
 thread_local!(static POOL: Pool = Pool::from_url(std::env::var("TEST_MYSQL_URL").unwrap()).unwrap());
 
 impl Fixture {
-    pub async fn create_with_database(prefix_database: &'static str) -> Result<Self, Error> {
+    pub(super) async fn create_with_database(prefix_database: &'static str) -> Result<Self, Error> {
         let mut connection = create_connection().await?;
         let database_index = DATABASE_NUMBER.get_or_init(Default::default);
         let database_index = database_index.fetch_add(1, Ordering::Relaxed);
@@ -100,38 +99,22 @@ impl Fixture {
         })
     }
 
-    pub async fn copy(&self) -> Result<Self, Error> {
-        Ok(Self {
-            conn: create_connection().await?,
-            database_name: self.database_name.clone(),
-        })
-    }
-
-    pub fn database_name_filter(&self, table: &TableMapEvent) -> bool {
-        match self.database_name {
-            Some((prefix, index)) => table
-                .database_name()
-                .eq_ignore_ascii_case(&format!("{prefix}{index}")),
-            _ => true,
-        }
-    }
-
-    pub async fn create_connection() -> Result<Conn, Error> {
+    pub(super) async fn create_connection() -> Result<Conn, Error> {
         create_connection().await
     }
 
-    pub fn create_database() -> Database {
+    pub(super) fn create_database() -> Database {
         Database::from_pool(pool().clone())
     }
 
-    pub fn database_name(&self) -> Option<Cow<str>> {
+    pub(super) fn database_name(&self) -> Option<Cow<str>> {
         match self.database_name {
             Some((prefix, index)) => Some(Cow::Owned(format!("{prefix}{index}"))),
             None => None,
         }
     }
 
-    pub async fn cleanup(mut self) -> Result<(), Error> {
+    pub(super) async fn cleanup(mut self) -> Result<(), Error> {
         match self.database_name {
             Some((prefix, index)) => self
                 .conn
@@ -142,7 +125,7 @@ impl Fixture {
         }
     }
 
-    pub async fn execute_queries(
+    pub(super) async fn execute_queries(
         &mut self,
         queries: impl IntoIterator<Item = impl AsQuery>,
     ) -> Result<(), Error> {
@@ -152,7 +135,7 @@ impl Fixture {
         Ok(())
     }
 
-    pub async fn insert_into<const N: usize>(
+    pub(super) async fn insert_into<const N: usize>(
         &mut self,
         table: &'static str,
         columns: [&'static str; N],
@@ -184,33 +167,8 @@ impl Fixture {
             .map_err(Error::MySQLError)
     }
 
-    pub async fn binlog_position(&mut self) -> Result<BinlogPosition, Error> {
-        let row: Row = self
-            .conn
-            .query_first("SHOW MASTER STATUS")
-            .await
-            .unwrap()
-            .unwrap();
-
-        Ok(BinlogPosition::new(
-            row.get::<String, _>(0).unwrap(),
-            row.get(1).unwrap(),
-        ))
-    }
-
-    pub async fn into_binary_log_stream(
-        self,
-        position: BinlogPosition,
-    ) -> Result<BinlogStream, Error> {
-        let replication_request = BinlogRequest::new(42)
-            .with_filename(position.file().as_bytes())
-            .with_pos(position.position())
-            .with_flags(BinlogDumpFlags::BINLOG_DUMP_NON_BLOCK);
-
-        self.conn
-            .get_binlog_stream(replication_request)
-            .await
-            .map_err(Error::MySQLError)
+    pub(super) async fn binlog_position() -> Result<BinlogPosition, Error> {
+        Self::create_database().binlog_position().await
     }
 }
 
@@ -222,7 +180,7 @@ fn pool() -> Pool {
     POOL.with(|pool| pool.clone())
 }
 
-trait BatchRow {
+pub(super) trait BatchRow {
     const LENGTH: usize;
 
     fn add_to_params(self, params: &mut Vec<Value>);

@@ -52,7 +52,7 @@ impl UpdateRowEvent {
 mod tests {
 
     use crate::replication::UpdateRowEvent;
-    use crate::test_util::IntoBinlogValue;
+    
 
     #[test]
     fn takes_value_from_before_column() {

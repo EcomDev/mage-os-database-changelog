@@ -2,7 +2,7 @@ use crate::aggregate::*;
 use crate::error::Error;
 use crate::output::Output;
 use rmp::encode::buffer::ByteBuf;
-use rmp::encode::{write_array_len, write_str, write_u8, write_uint, ValueWriteError};
+use rmp::encode::{write_array_len, write_str, write_uint, ValueWriteError};
 use std::convert::Infallible;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
@@ -29,7 +29,7 @@ impl Output for MessagePack {
 }
 
 impl From<ValueWriteError<Infallible>> for Error {
-    fn from(value: ValueWriteError<Infallible>) -> Self {
+    fn from(_value: ValueWriteError<Infallible>) -> Self {
         Error::OutputError
     }
 }

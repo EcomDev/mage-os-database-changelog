@@ -1,5 +1,5 @@
 use crate::schema::info_table::InfoSchemaTable;
-use crate::schema::{table_name, table_name_without_prefix};
+use crate::schema::{table_name_without_prefix};
 use mysql_async::prelude::Queryable;
 use mysql_async::{Conn, Error};
 use mysql_common::params::Params;

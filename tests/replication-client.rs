@@ -4,11 +4,10 @@ use fixture::Fixture;
 use mage_os_database_changelog::binlog_row;
 use mage_os_database_changelog::error::Error;
 use mage_os_database_changelog::replication::{
-    BinlogPosition, Event, EventMetadata, ReplicationClient, UpdateRowEvent,
+    Event, EventMetadata, ReplicationClient, UpdateRowEvent,
 };
-use mage_os_database_changelog::test_util::{IntoBinlogValue, ObserverSpy};
+use mage_os_database_changelog::test_util::ObserverSpy;
 use std::future::Future;
-use std::time::Duration;
 
 #[tokio::test]
 async fn reports_insert_events() -> Result<(), Error> {
@@ -115,7 +114,7 @@ async fn reports_update_events() -> Result<(), Error> {
 
 #[tokio::test]
 async fn ignores_events_not_related_to_own_data_base() -> Result<(), Error> {
-    let mut fixture = Fixture::create_with_database("test_database").await?;
+    let fixture = Fixture::create_with_database("test_database").await?;
     let mut another_fixture = Fixture::create_with_database("test_database").await?;
 
     another_fixture
@@ -147,7 +146,7 @@ async fn ignores_events_not_related_to_own_data_base() -> Result<(), Error> {
 
 #[tokio::test]
 async fn notifies_metadata_on_each_separate_event() -> Result<(), Error> {
-    let mut fixture = Fixture::create_with_database("test_database").await?;
+    let fixture = Fixture::create_with_database("test_database").await?;
     let client = client(&fixture);
     let observer = perform_client_action(client, fixture, |mut fixture| async move {
         fixture
@@ -176,7 +175,7 @@ async fn notifies_metadata_on_each_separate_event() -> Result<(), Error> {
 
 #[tokio::test]
 async fn changes_binlog_filename_on_flush_event() -> Result<(), Error> {
-    let mut fixture = Fixture::create_with_database("test_database").await?;
+    let fixture = Fixture::create_with_database("test_database").await?;
     let client = client(&fixture);
     let observer = perform_client_action(client, fixture, |mut fixture| async move {
         fixture
@@ -210,7 +209,7 @@ async fn changes_binlog_filename_on_flush_event() -> Result<(), Error> {
 
 #[tokio::test]
 async fn updates_position_in_each_metadata() -> Result<(), Error> {
-    let mut fixture = Fixture::create_with_database("test_database").await?;
+    let fixture = Fixture::create_with_database("test_database").await?;
     let client = client(&fixture);
     let observer = perform_client_action(client, fixture, |mut fixture| async move {
         fixture
@@ -258,13 +257,6 @@ fn create_client(
     client
 }
 
-fn client_with_table_prefix(
-    fixture: &Fixture,
-    table_prefix: &'static str,
-) -> ReplicationClient<String, &'static str> {
-    create_client(fixture, table_prefix)
-}
-
 fn client(fixture: &Fixture) -> ReplicationClient<String, &'static str> {
     create_client(fixture, "")
 }
@@ -295,7 +287,7 @@ where
     F: FnOnce(Fixture) -> Fut,
     Fut: Future<Output = Result<(), Error>>,
 {
-    let position = fixture.binlog_position().await?;
+    let position = Fixture::binlog_position().await?;
 
     action(fixture).await?;
 

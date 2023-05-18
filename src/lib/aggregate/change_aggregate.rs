@@ -1,9 +1,9 @@
-use crate::replication::{BinlogPosition, EventMetadata};
+use crate::replication::{EventMetadata};
 use crate::MODIFIED_FIELDS_BUFFER_SIZE;
-use mysql_common::frunk::labelled::chars::u;
+
 use serde_json::Value;
 use smallvec::SmallVec;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]

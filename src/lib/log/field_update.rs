@@ -3,7 +3,7 @@ use crate::replication::UpdateRowEvent;
 use crate::schema::TableSchema;
 use crate::MODIFIED_FIELDS_BUFFER_SIZE;
 use smallvec::SmallVec;
-use std::process::id;
+
 
 pub enum FieldUpdate<T> {
     Empty(T),
@@ -51,8 +51,8 @@ impl IntoChangeLog<ProductChange> for FieldUpdate<usize> {
 #[cfg(test)]
 mod tests {
     use crate::log::{FieldUpdate, IntoChangeLog, ProductChange};
-    use crate::replication::{Event, UpdateRowEvent};
-    use bitvec::field;
+    use crate::replication::{UpdateRowEvent};
+    
     use smallvec::SmallVec;
 
     #[test]
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn creates_product_change_log_when_fields_are_provided() {
-        let mut field_change = FieldUpdate::new(123);
+        let field_change = FieldUpdate::new(123);
         let event = UpdateRowEvent::new(binlog_row!(1, 2, 3, 4), binlog_row!(1, 4, 6, 4));
 
         let table = test_table!(

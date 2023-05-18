@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     use crate::replication::binary_table::BinaryTable;
     use crate::replication::test_fixture::Fixture;
-    use crate::test_util::*;
+    
 
     use mysql_common::binlog::jsondiff::JsonDiffOperation;
 

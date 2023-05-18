@@ -2,9 +2,9 @@ use crate::aggregate::change_aggregate::{ChangeAggregate, ChangeAggregateKey};
 use crate::aggregate::{Aggregate, ChangeAggregateEntity};
 use crate::log::{ItemChange, ProductChange};
 use crate::replication::EventMetadata;
-use mysql_common::frunk::labelled::chars::{e, s};
+
 use std::collections::{HashMap, HashSet};
-use std::mem::size_of_val;
+
 
 #[derive(Eq, PartialEq, Hash)]
 enum AggregateKey {
@@ -139,7 +139,7 @@ mod tests {
     use crate::aggregate::ChangeAggregateEntity;
     use crate::log::ProductChange;
     use crate::replication::BinlogPosition;
-    use std::mem::size_of_val;
+    
 
     #[test]
     fn returns_size_in_bytes_for_data_container() {

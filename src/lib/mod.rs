@@ -6,6 +6,7 @@ pub mod test_util;
 #[macro_use]
 pub mod replication;
 pub mod aggregate;
+pub mod app;
 pub mod database;
 pub mod error;
 pub mod log;

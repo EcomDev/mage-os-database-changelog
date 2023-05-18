@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::log::{ChangeLogSender, ItemChange};
-use crate::mapper::magento_two::MagentoTwoMapper;
+
 use crate::mapper::ChangeLogMapper;
 use crate::replication::{Event, EventMetadata, EventObserver};
 use crate::schema::TableSchema;

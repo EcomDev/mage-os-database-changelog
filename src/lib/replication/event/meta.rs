@@ -78,9 +78,9 @@ impl EventMetadata {
 #[cfg(test)]
 mod tests {
     use crate::replication::event::meta::BinlogPosition;
-    use crate::replication::test_fixture::Fixture;
-    use mysql_common::binlog::consts::{EventFlags, EventType};
-    use mysql_common::binlog::events::BinlogEventHeader;
+    
+    
+    
 
     #[test]
     fn creates_binlog_file_from_string() {

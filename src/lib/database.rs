@@ -1,14 +1,16 @@
 use crate::error::Error;
 use crate::replication::BinlogPosition;
-use crate::schema::SchemaInformation;
+
 use mysql_async::prelude::Queryable;
 use mysql_async::{BinlogStream, Conn, Opts, Pool};
 use mysql_common::packets::binlog_request::BinlogRequest;
 use mysql_common::packets::BinlogDumpFlags;
+use mysql_common::row::Row;
 
 #[derive(Clone, Debug)]
 pub struct Database {
     pool: Pool,
+    dump_options: BinlogDumpFlags,
 }
 
 impl Database {
@@ -18,11 +20,22 @@ impl Database {
     {
         Self {
             pool: Pool::new(opts),
+            dump_options: BinlogDumpFlags::BINLOG_DUMP_NON_BLOCK,
         }
     }
 
     pub fn from_pool(pool: Pool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+            dump_options: BinlogDumpFlags::BINLOG_DUMP_NON_BLOCK,
+        }
+    }
+
+    pub fn with_dump_options(self, options: BinlogDumpFlags) -> Self {
+        Self {
+            dump_options: options,
+            ..self
+        }
     }
 
     pub async fn acquire_connection(&self) -> Result<Conn, Error> {
@@ -34,18 +47,31 @@ impl Database {
 
         let server_id = connection
             .query_first("SELECT @@server_id;")
-            .await
-            .map_err(Error::MySQLError)?
+            .await?
             .unwrap_or(1);
 
-        connection
+        Ok(connection
             .get_binlog_stream(
                 BinlogRequest::new(server_id)
                     .with_filename(position.file().as_bytes())
                     .with_pos(position.position())
-                    .with_flags(BinlogDumpFlags::BINLOG_DUMP_NON_BLOCK),
+                    .with_flags(self.dump_options),
             )
-            .await
-            .map_err(Error::MySQLError)
+            .await?)
+    }
+
+    pub async fn binlog_position(&mut self) -> Result<BinlogPosition, Error> {
+        let row: Row = self
+            .acquire_connection()
+            .await?
+            .query_first("SHOW MASTER STATUS")
+            .await?
+            .ok_or(Error::BinlogPositionMissing)?;
+
+        Ok(BinlogPosition::new(
+            row.get::<String, _>(0)
+                .ok_or(Error::BinlogPositionMissing)?,
+            row.get(1).ok_or(Error::BinlogPositionMissing)?,
+        ))
     }
 }

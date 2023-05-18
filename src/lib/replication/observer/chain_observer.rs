@@ -42,9 +42,9 @@ mod tests {
     use crate::replication::{
         BinlogPosition, ChangeLogEventObserver, EventMetadata, EventObserverExt,
     };
-    use crate::test_util::{IntoBinlogValue, ObserverSpy};
+    use crate::test_util::{ObserverSpy};
     use std::io::ErrorKind;
-    use tracing::metadata;
+    
 
     struct FailureObserver;
 

@@ -21,4 +21,6 @@ pub enum Error {
     OutputError,
     #[error("Failed to synchronize data between threads")]
     Synchronization,
+    #[error("Binlog position cannot be found in database")]
+    BinlogPositionMissing,
 }
