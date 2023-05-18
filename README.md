@@ -80,9 +80,6 @@ cargo build --release
 cp target/release/database-changelog ./to/your/path/
 ```
 
-``````
-
-
 ## Compatibility
 - MySQL 5.7+, 8.0+ (or MariaDB equivalent)
 - Mage-OS 2.4 and later
