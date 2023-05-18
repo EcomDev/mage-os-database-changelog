@@ -1,11 +1,12 @@
-use crate::aggregate::{Aggregate, ProductAggregate};
+use crate::aggregate::{Aggregate, AsyncAggregate, ProductAggregate, WrappedAggregate};
 use crate::app::{ApplicationConfig, ApplicationOutput};
 use crate::database::Database;
 use crate::error::Error;
 use crate::log::{ChangeLogSender, ItemChange};
-use crate::mapper::{ChangeLogMapper, MagentoTwoMapper, MapperObserver};
-use crate::output::{Output};
+use crate::mapper::{ChainMapper, ChangeLogMapper, MagentoTwoMapper, MapperObserver};
+use crate::output::Output;
 use crate::replication::{BinlogPosition, ReplicationClient};
+use std::time::Duration;
 
 use mysql_common::packets::BinlogDumpFlags;
 use serde_json::json;
@@ -26,22 +27,6 @@ where
     mapper: M,
 }
 
-async fn write_to_stdout(
-    output: &ApplicationOutput,
-    change: &mut impl Aggregate,
-) -> Result<(), Error> {
-    let change = match change.flush() {
-        Some(value) => value,
-        None => return Ok(()),
-    };
-
-    let mut stdout = stdout();
-
-    output.write(&mut stdout, change).await?;
-
-    Ok(())
-}
-
 async fn create_writer(
     output: ApplicationOutput,
     config: ApplicationConfig,
@@ -52,28 +37,34 @@ async fn create_writer(
     let (sender, mut receiver) = channel(10000);
 
     let handle = tokio::spawn(async move {
-        let mut aggregate = ProductAggregate::default();
+        let mut aggregate = WrappedAggregate::new(ProductAggregate::default());
+
+        let limit = config.batch_limit();
 
         while let Some(item) = receiver.recv().await {
             aggregate.push(item);
-
-            if aggregate.size() > config.batch_size() {
-                write_to_stdout(&output, &mut aggregate).await?
-            }
+            aggregate.write(&limit, &output, stdout()).await?;
         }
 
-        write_to_stdout(&output, &mut aggregate).await
+        aggregate.write_eof(&output, stdout()).await
     });
 
     (sender, handle)
 }
 
-impl Application {
-    pub fn new() -> Self {
-        Self {
-            mapper: MagentoTwoMapper,
+impl<M> Application<M>
+where
+    M: ChangeLogMapper<ItemChange>,
+{
+    pub fn with_mapper<R>(self, mapper: R) -> Application<ChainMapper<M, R>>
+    where
+        R: ChangeLogMapper<ItemChange>,
+    {
+        Application {
+            mapper: ChainMapper::new(self.mapper, mapper),
         }
     }
+
     async fn run_binlog_client(
         self,
         database: Database,
@@ -127,5 +118,13 @@ impl Application {
         };
 
         Ok(())
+    }
+}
+
+impl Application {
+    pub fn new() -> Self {
+        Self {
+            mapper: MagentoTwoMapper,
+        }
     }
 }

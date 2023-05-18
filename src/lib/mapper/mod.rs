@@ -1,3 +1,4 @@
+mod chain;
 mod magento_two;
 mod observer;
 mod product;
@@ -13,6 +14,7 @@ mod product_website;
 use crate::error::Error;
 use crate::replication::Event;
 use crate::schema::TableSchema;
+pub use chain::ChainMapper;
 pub use magento_two::MagentoTwoMapper;
 pub use observer::MapperObserver;
 pub use product::ProductMapper;

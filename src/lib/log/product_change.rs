@@ -1,8 +1,7 @@
-
 use crate::MODIFIED_FIELDS_BUFFER_SIZE;
 use smallvec::SmallVec;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum ProductChange {
     Deleted(usize),
     Created(usize),

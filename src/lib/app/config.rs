@@ -1,10 +1,10 @@
-
 use crate::database::Database;
 
 use mysql_async::{Opts, OptsBuilder};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt::Formatter;
+use std::time::Duration;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ConnectionOpts(Opts);
@@ -16,6 +16,8 @@ pub struct ApplicationConfig {
     table_prefix: String,
     #[serde(default = "ApplicationConfig::default_batch_size")]
     batch_size: usize,
+    #[serde(default = "ApplicationConfig::default_batch_duration")]
+    batch_duration: u64,
     connection: ConnectionOpts,
 }
 
@@ -24,17 +26,22 @@ impl ApplicationConfig {
         10000
     }
 
+    fn default_batch_duration() -> u64 {
+        60
+    }
+
     pub fn new(database: impl Into<String>, connection: impl Into<ConnectionOpts>) -> Self {
         Self {
             database: database.into(),
             table_prefix: Default::default(),
             batch_size: Self::default_batch_size(),
+            batch_duration: Self::default_batch_duration(),
             connection: connection.into(),
         }
     }
 
-    pub fn batch_size(&self) -> usize {
-        self.batch_size
+    pub fn batch_limit(&self) -> (usize, Duration) {
+        (self.batch_size, Duration::from_secs(self.batch_duration))
     }
 
     pub fn create_database(&self) -> Database {

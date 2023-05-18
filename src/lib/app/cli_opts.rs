@@ -1,4 +1,3 @@
-
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -7,7 +6,6 @@ use crate::app::{ApplicationCommand, ApplicationConfig, ApplicationOutput};
 use crate::replication::BinlogPosition;
 
 use clap::{arg, command, value_parser, Command};
-
 
 fn parse_output_format(value: &str) -> Result<ApplicationOutput, String> {
     match value {
@@ -26,7 +24,7 @@ fn parse_config_file_location(value: &str) -> Result<ApplicationConfig, String> 
     };
 
     if !path.exists() || !path.is_file() {
-        return return Err(format!("Configuration file {value} does not exists"));
+        return Err(format!("Configuration file {value} does not exists"));
     }
     let extension_error = format!("Configuration {value} file does not have extension");
 

@@ -80,6 +80,7 @@ impl BinaryRow {
         }
     }
 
+    #[cfg(any(test, docsrs, feature = "test_util"))]
     pub(crate) fn matches(
         &self,
         other: impl Iterator<Item = impl PartialEq<Option<BinlogValue<'static>>>>,
@@ -97,6 +98,7 @@ impl BinaryRow {
         flag
     }
 
+    #[cfg(any(test, docsrs, feature = "test_util"))]
     pub(crate) fn values(&self) -> &SmallVec<[Option<BinlogValue<'static>>; ROW_BUFFER_SIZE]> {
         &self.values
     }
@@ -147,7 +149,7 @@ impl BinaryRow {
 #[cfg(test)]
 mod tests {
 
-    use crate::test_util::{TestTableSchema};
+    use crate::test_util::TestTableSchema;
     use mysql_common::binlog::value::BinlogValue;
 
     #[test]

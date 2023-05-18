@@ -6,6 +6,7 @@ use serde_json::{json, to_vec, Value};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 /// JSON output for aggregate events
+#[derive(Clone)]
 pub struct JsonOutput;
 
 fn entity_to_str(entity: ChangeAggregateEntity) -> &'static str {

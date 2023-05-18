@@ -19,8 +19,8 @@ features = [
 
 [dependencies]
 toml = { version = "0.7" }
-mysql_async = { version = "0.31", default-features = false, features = ["default-rustls", "tracing"]}
-mysql_common = "0.29"
+mysql_async = { version = "0.32.2", default-features = false, features = ["default-rustls"]}
+mysql_common = "0.30.3"
 tracing = { version = "0.1", features = ["max_level_debug", "release_max_level_info"] }
 tokio = { version = "1", features = ["rt-multi-thread", "signal", "time", "macros", "io-std"] }
 clap = { version = "4", features = ["derive", "cargo"] }

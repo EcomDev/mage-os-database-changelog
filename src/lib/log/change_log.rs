@@ -1,7 +1,7 @@
 use crate::log::ProductChange;
 use crate::replication::EventMetadata;
 
-
+#[derive(PartialEq, Debug, Clone)]
 pub enum ItemChange {
     ProductChange(ProductChange),
     Metadata(EventMetadata),

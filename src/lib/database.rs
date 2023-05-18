@@ -1,5 +1,6 @@
 use crate::error::Error;
 use crate::replication::BinlogPosition;
+use std::cmp::max;
 
 use mysql_async::prelude::Queryable;
 use mysql_async::{BinlogStream, Conn, Opts, Pool};
@@ -46,13 +47,20 @@ impl Database {
         let mut connection = self.acquire_connection().await?;
 
         let server_id = connection
-            .query_first("SELECT @@server_id;")
+            .query_first("SELECT @@server_id")
             .await?
             .unwrap_or(1);
 
+        let server_id = connection
+            .query_fold("SHOW SLAVE HOSTS", server_id, |init, row: Row| {
+                max(init, row.get::<u32, _>(0).unwrap_or(0))
+            })
+            .await
+            .map_err(|_| Error::BinlogPositionMissing)?;
+
         Ok(connection
             .get_binlog_stream(
-                BinlogRequest::new(server_id)
+                BinlogRequest::new(server_id + 1)
                     .with_filename(position.file().as_bytes())
                     .with_pos(position.position())
                     .with_flags(self.dump_options),

@@ -8,7 +8,7 @@ pub use msgpack::*;
 
 use tokio::io::AsyncWrite;
 
-pub trait Output {
+pub trait Output: Clone {
     async fn write<T: AsyncWrite + Unpin>(
         &self,
         writer: &mut T,

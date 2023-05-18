@@ -4,7 +4,7 @@ use crate::log::{ItemChange, ProductChange};
 use crate::replication::EventMetadata;
 
 use std::collections::{HashMap, HashSet};
-
+use std::time::Duration;
 
 #[derive(Eq, PartialEq, Hash)]
 enum AggregateKey {
@@ -110,9 +110,7 @@ impl Aggregate for ProductAggregate {
     }
 
     fn size(&self) -> usize {
-        self.data
-            .iter()
-            .fold(0, |value, (_, item)| value + item.len())
+        self.size
     }
 
     fn flush(&mut self) -> Option<ChangeAggregate> {
@@ -139,7 +137,6 @@ mod tests {
     use crate::aggregate::ChangeAggregateEntity;
     use crate::log::ProductChange;
     use crate::replication::BinlogPosition;
-    
 
     #[test]
     fn returns_size_in_bytes_for_data_container() {

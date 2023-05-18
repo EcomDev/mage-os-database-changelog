@@ -7,6 +7,7 @@ use std::convert::Infallible;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 /// MessagePack output for aggregate events
+#[derive(Clone)]
 pub struct MessagePack;
 
 impl Output for MessagePack {
