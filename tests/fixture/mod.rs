@@ -1,12 +1,12 @@
 use mysql_async::prelude::*;
 use mysql_async::Pool;
-use mysql_async::{BinlogStream, Conn};
-use mysql_common::binlog::events::TableMapEvent;
+use mysql_async::{Conn};
 
-use mysql_common::packets::binlog_request::BinlogRequest;
-use mysql_common::packets::BinlogDumpFlags;
 
-use mysql_common::row::Row;
+
+
+
+
 use mysql_common::value::Value;
 use std::borrow::Cow;
 

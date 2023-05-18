@@ -1,13 +1,13 @@
-use std::ffi::OsStr;
+
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
 use crate::app::{ApplicationCommand, ApplicationConfig, ApplicationOutput};
 use crate::replication::BinlogPosition;
-use clap::builder::Str;
-use clap::{arg, command, value_parser, ArgAction, Command};
-use mysql_common::frunk::labelled::IntoLabelledGeneric;
+
+use clap::{arg, command, value_parser, Command};
+
 
 fn parse_output_format(value: &str) -> Result<ApplicationOutput, String> {
     match value {

@@ -280,7 +280,7 @@ where
 
 async fn perform_client_action<F, Fut>(
     client: ReplicationClient<String, &str>,
-    mut fixture: Fixture,
+    fixture: Fixture,
     action: F,
 ) -> Result<ObserverSpy, Error>
 where

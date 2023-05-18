@@ -4,9 +4,9 @@ use crate::database::Database;
 use crate::error::Error;
 use crate::log::{ChangeLogSender, ItemChange};
 use crate::mapper::{ChangeLogMapper, MagentoTwoMapper, MapperObserver};
-use crate::output::{JsonOutput, Output};
+use crate::output::{Output};
 use crate::replication::{BinlogPosition, ReplicationClient};
-use mysql_common::frunk::labelled::chars::o;
+
 use mysql_common::packets::BinlogDumpFlags;
 use serde_json::json;
 use tokio::io::stdout;
