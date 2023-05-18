@@ -1,12 +1,16 @@
-use error::ReplicationError;
-mod error;
-mod reader;
+mod binary_table;
+mod client;
+mod row;
+mod rows;
 
-pub use reader::ReplicationReader;
+mod event;
+#[macro_use]
+mod observer;
+#[cfg(test)]
+pub(crate) mod test_fixture;
 
-pub trait ReplicationObserver {
-    fn update_row(&mut self);
-    fn write_row(&mut self);
-    fn delete_row(&mut self);
-    fn update_partial_row(&mut self);
-}
+pub use client::ReplicationClient;
+pub use event::*;
+pub use observer::*;
+pub use row::BinaryRow;
+pub use rows::BinaryRowIter;
