@@ -1,9 +1,15 @@
+use crate::log::catalog_inventory_change::CatalogInventoryChange;
+use crate::log::CatalogRuleChange;
+use crate::log::CatalogRuleProductChange;
 use crate::log::ProductChange;
 use crate::replication::EventMetadata;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum ItemChange {
     ProductChange(ProductChange),
+    CatalogInventoryChange(CatalogInventoryChange),
+    CatalogRuleChange(CatalogRuleChange),
+    CatalogRuleProductChange(CatalogRuleProductChange),
     Metadata(EventMetadata),
 }
 

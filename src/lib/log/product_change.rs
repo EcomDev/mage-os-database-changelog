@@ -1,3 +1,4 @@
+use crate::log::{FieldUpdate, IntoChangeLog};
 use crate::MODIFIED_FIELDS_BUFFER_SIZE;
 use smallvec::SmallVec;
 
@@ -15,4 +16,13 @@ pub enum ProductChange {
     TierPrice(usize),
     Url(usize, usize),
     CategoryUrl(usize, usize),
+}
+
+impl IntoChangeLog<ProductChange> for FieldUpdate<usize> {
+    fn into_change_log(self) -> Option<ProductChange> {
+        match self {
+            Self::Empty(_) => None,
+            Self::WithFields(identity, columns) => Some(ProductChange::Fields(identity, columns)),
+        }
+    }
 }

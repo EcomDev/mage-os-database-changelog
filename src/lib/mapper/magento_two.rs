@@ -1,11 +1,11 @@
 use crate::error::Error;
 use crate::log::ItemChange;
-use crate::log::ItemChange::ProductChange;
+use crate::log::ItemChange::{CatalogRuleChange, ProductChange};
 use crate::mapper::product_category::ProductCategoryMapper;
 use crate::mapper::{
-    ChangeLogMapper, ProductAttributeMapper, ProductBundleMapper, ProductConfigurableMapper,
-    ProductLinkMapper, ProductMapper, ProductMediaGalleryValue, ProductTierPriceMapper,
-    ProductWebsite,
+    CatalogRuleMapper, ChangeLogMapper, ProductAttributeMapper, ProductBundleMapper,
+    ProductConfigurableMapper, ProductLinkMapper, ProductMapper, ProductMediaGalleryValue,
+    ProductTierPriceMapper, ProductWebsite,
 };
 use crate::replication::Event;
 use crate::schema::TableSchema;
@@ -48,6 +48,9 @@ impl ChangeLogMapper<ItemChange> for MagentoTwoMapper {
             "catalog_product_super_link" => ProductConfigurableMapper
                 .map_event(event, schema)?
                 .map(ProductChange),
+            "catalogrule" => CatalogRuleMapper
+                .map_event(event, schema)?
+                .map(CatalogRuleChange),
             _ => None,
         })
     }

@@ -4,7 +4,6 @@ use crate::schema::TableSchema;
 use crate::MODIFIED_FIELDS_BUFFER_SIZE;
 use smallvec::SmallVec;
 
-
 pub enum FieldUpdate<T> {
     Empty(T),
     WithFields(T, SmallVec<[&'static str; MODIFIED_FIELDS_BUFFER_SIZE]>),
@@ -39,20 +38,11 @@ impl<T> FieldUpdate<T> {
     }
 }
 
-impl IntoChangeLog<ProductChange> for FieldUpdate<usize> {
-    fn into_change_log(self) -> Option<ProductChange> {
-        match self {
-            Self::Empty(_) => None,
-            Self::WithFields(identity, columns) => Some(ProductChange::Fields(identity, columns)),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::log::{FieldUpdate, IntoChangeLog, ProductChange};
-    use crate::replication::{UpdateRowEvent};
-    
+    use crate::replication::UpdateRowEvent;
+
     use smallvec::SmallVec;
 
     #[test]

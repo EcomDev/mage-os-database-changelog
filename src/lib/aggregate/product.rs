@@ -5,7 +5,6 @@ use crate::replication::EventMetadata;
 
 use std::collections::{HashMap, HashSet};
 
-
 #[derive(Eq, PartialEq, Hash)]
 enum AggregateKey {
     Created,
@@ -106,6 +105,7 @@ impl Aggregate for ProductAggregate {
             ItemChange::ProductChange(product_change) => {
                 self.process_product_change(product_change)
             }
+            _ => {}
         }
     }
 

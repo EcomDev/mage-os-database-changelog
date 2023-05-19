@@ -16,5 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `log::ItemChange` to store multiple domain model specific changes in an enum
 - `aggregate::Aggregate` and `aggregate::AsyncAggregate` to process `log::ItemChange` in batches and product output of `aggregate::ChangeAggregate`
 - `app::Application` to build easily your own changelog customized apps
+- Implemented the following `ChangeLogMappers`
+  - `mapper::ProductMapper` monitors product changes in main entity
+  - `mapper::ProductAttributeMapper` monitors product changes in EAV attribute tables
+  - `mapper::ProductTierPriceMapper` monitors product tier price update
+  - `mapper::ProductWebsite` monitors product assignment to website             
+  - `mapper::ProductCategoryMapper` monitors product category assignment
+  - `mapper::ProductLinkMapper`  monitors product link relation change (grouped)     
+  - `mapper::ProductMediaGalleryValue` monitors product image gallery updates
+  - `mapper::ProductBundleMapper` monitors product bundle mapper     
+  - `mapper::ProductConfigurableMapper` monitors product configurable mapper
+  - `mapper::CatalogRuleMapper` monitors catalog rule changes
 
 [unreleased]: https://github.com/EcomDev/mage-os-database-changelog/compare/0a7c672...HEAD

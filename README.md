@@ -80,6 +80,30 @@ cargo build --release
 cp target/release/database-changelog ./to/your/path/
 ```
 
+## Monitored Tables
+
+
+| Table Name                                 | Mapper                               |
+|--------------------------------------------|--------------------------------------| 
+| catalog_product_entity                     | `mapper::ProductMapper`              |
+| catalog_product_entity_datetime            | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_decimal             | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_int                 | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_text                | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_varchar             | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_varchar             | `mapper::ProductAttributeMapper`     |
+| catalog_product_entity_tier_price          | `mapper::ProductTierPriceMapper`     |
+| catalog_product_entity_website             | `mapper::ProductWebsite`             |  
+| catalog_category_product                   | `mapper::ProductCategoryMapper`      |  
+| catalog_product_link                       | `mapper::ProductLinkMapper`          |
+| catalog_product_entity_media_gallery_value | `mapper::ProductMediaGalleryValue`   |
+| catalog_product_bundle_selection           | `mapper::ProductBundleMapper`        |
+| catalog_product_super_link                 | `mapper::ProductConfigurableMapper`  |
+| catalogrule                                | `mapper::CatalogRuleMapper`          |
+
+
+
+
 ## Compatibility
 - MySQL 5.7+, 8.0+ (or MariaDB equivalent)
 - Mage-OS 2.4 and later
